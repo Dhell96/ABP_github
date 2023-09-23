@@ -43,7 +43,10 @@ def synchronize_signals_peaks(s1,s2):
     peaks_1, _ = scipy.signal.find_peaks(s1, prominence=calc_prom_1, distance = 50)
     peaks_2, _ = scipy.signal.find_peaks(s2, prominence=calc_prom_2, distance = 50)
     m = np.min([len(peaks_1), len(peaks_2)])
-    time_delay = int(np.median(peaks_1[:m] - peaks_2[:m]))
+    try:
+      time_delay = int(np.median(peaks_1[:m] - peaks_2[:m]))
+    except:
+       plt.plot(s1,s2)
     synchronized_signal2 = np.roll(s2, time_delay)
     return synchronized_signal2, time_delay
 
