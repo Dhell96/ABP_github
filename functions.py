@@ -46,8 +46,9 @@ def synchronize_signals_peaks(s1,s2):
     try:
       time_delay = int(np.median(peaks_1[:m] - peaks_2[:m]))
     except:
-       plt.plot(s1,s2)
-    synchronized_signal2 = np.roll(s2, time_delay)
+       plt.plot(s1)
+       plt.plot(s2)
+       synchronized_signal2 = np.roll(s2, time_delay)
     return synchronized_signal2, time_delay
 
 def gaussian(x, a, b, c):
