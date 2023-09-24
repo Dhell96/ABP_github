@@ -43,11 +43,7 @@ def synchronize_signals_peaks(s1,s2):
     peaks_1, _ = scipy.signal.find_peaks(s1, prominence=calc_prom_1, distance = 50)
     peaks_2, _ = scipy.signal.find_peaks(s2, prominence=calc_prom_2, distance = 50)
     m = np.min([len(peaks_1), len(peaks_2)])
-    try:
-      time_delay = int(np.median(peaks_1[:m] - peaks_2[:m]))
-    except:
-       plt.plot(s1)
-       plt.plot(s2)
+    time_delay = int(np.median(peaks_1[:m] - peaks_2[:m]))
     synchronized_signal2 = np.roll(s2, time_delay)
     return synchronized_signal2, time_delay
 
@@ -148,4 +144,130 @@ def find_peaks_valleys(x, prom = 0.5):
      plt.plot(peaks_min_X[:len(peaks_min_Y)],peaks_min_Y, "x")
 
 
+def identify_blocks(blocks_of_interest):
+    blocks = []
+    current_block = []
+    for i, val in enumerate(blocks_of_interest):
+        if val == 0.1:
+            current_block.append(i)
+        else:
+            if current_block:
+                blocks.append(current_block)
+                current_block = []
+    if current_block:  # Add the last block if it hasn't been added yet
+        blocks.append(current_block)
+    return blocks
 
+
+def find_peaks_custom(PPG_signal, F1, W1, W2, beta):
+    S_peaks = []
+    Filtered = butter_bandpass_filter(PPG_signal, 0.5, 8, 125,order=2)
+    Clipped = clip_signal(Filtered)
+    Q_clipped = square_signal(Clipped)
+    MA_peak = moving_average(Q_clipped, W1)
+    MA_beat = moving_average(Q_clipped, W2)
+    zeta = np.mean(Q_clipped)
+    alfa = beta * zeta + MA_beat
+    THR1 = MA_beat + alfa
+    BlocksOfInterest = np.zeros(len(MA_peak))
+    
+    for n in range(len(MA_peak)):
+        if MA_peak[n] > THR1[n]:
+            BlocksOfInterest[n] = 0.1
+        else:
+            BlocksOfInterest[n] = 0
+
+    # Identify blocks based on BlocksOfInterest
+    Blocks = identify_blocks(BlocksOfInterest)
+
+    THR2 = W1
+
+    for block in Blocks:  # Assuming Blocks is a list of segments, each containing indices
+        width = len(block)
+        if width >= THR2:
+            max_val_index = np.argmax(PPG_signal[block])
+            S_peaks.append(block[max_val_index])
+        else:
+            # Ignore block
+            continue
+    
+    return S_peaks
+
+# Assuming you have PPG_signal, F1, F2, W1, W2, beta, and zeta
+# S_peaks = find_peaks(PPG_signal, F1, F2, W1, W2, beta, zeta)
+
+
+
+
+def butter_bandpass_filter(data, lowcut, highcut, fs, order=4):
+    """Apply a Butterworth bandpass filter to the data.
+
+    Parameters:
+        data (array): The signal data to be filtered.
+        lowcut (float): The lower cutoff frequency in Hz.
+        highcut (float): The higher cutoff frequency in Hz.
+        fs (float): The sampling frequency in Hz.
+        order (int): The order of the filter.
+
+    Returns:
+        array: The filtered data.
+    """
+    nyquist = 0.5 * fs
+    low = lowcut / nyquist
+    high = highcut / nyquist
+    b, a = signal.butter(order, [low, high], btype='band')
+    y = signal.filtfilt(b, a, data)
+    return y
+
+# Clipping function
+def clip_signal(signal):
+    return np.maximum(signal, 0)
+
+# Squaring function
+def square_signal(signal):
+    return signal ** 2
+
+# Moving Average function
+def moving_average(y, window_size):
+    return np.convolve(y, np.ones(window_size) / window_size, mode='same')
+
+def find_intervals_and_max_points(ss, beta, w1=70, w2=200, f1=20,f2=50, lim = 1):
+    intervals = []
+    max_points = []
+    start_idx = None
+    
+    s = np.array(ss)
+    s = butter_bandpass_filter(s, f1, f2, 125)  # Assuming butter_bandpass_filter is defined
+    B = np.maximum(s, 0)
+    B = B * B
+    MA_peak = moving_average(B, w1)  # Assuming moving_average is defined
+    MA_beat = moving_average(B, w2)
+    
+    z = np.mean(B)
+    alfa = z * beta
+    th1 = MA_beat + alfa
+    
+    for i in range(len(MA_peak)):
+        if MA_peak[i] > th1[i]:
+            if start_idx is None:
+                start_idx = i
+                max_val = ss[i]
+                max_idx = i
+            else:
+                if ss[i] > max_val:
+                    max_val = ss[i]
+                    max_idx = i
+        else:
+            if start_idx is not None:
+
+                if i - 1 - start_idx >= w1/lim:  # Check if the interval length is >= w1
+                    intervals.append((start_idx, i - 1))
+                    max_points.append(max_idx)                  
+                start_idx = None
+                
+    # Handle the case where the last interval extends to the end of the list
+    if start_idx is not None and len(MA_peak) - 1 - start_idx >= w1:
+        intervals.append((start_idx, len(MA_peak) - 1))
+        max_points.append(max_idx)
+        
+    return intervals, max_points, MA_peak, th1
