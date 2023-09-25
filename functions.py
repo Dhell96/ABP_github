@@ -196,7 +196,19 @@ def find_peaks_custom(PPG_signal, F1, W1, W2, beta):
 # Assuming you have PPG_signal, F1, F2, W1, W2, beta, and zeta
 # S_peaks = find_peaks(PPG_signal, F1, F2, W1, W2, beta, zeta)
 
+def chebyshev_8th(x, N = 8, fc = [2,59], fs= 125):
+    #N = 8                    # Filter order
+               # Sampling frequency (Hz)             # Cut-off frequency (Hz)
+    rp = 1                   # Passband ripple (dB)
 
+    # Compute filter coefficients
+    b, a = scipy.signal.cheby1(N, rp, fc, btype='bandpass', fs=fs)
+    w, gd = scipy.signal.group_delay((b, a))
+    gd_mean = int(np.round(np.mean(gd)))
+    delay = gd_mean + 1
+    #print("delay_cheb",delay)
+    output = scipy.signal.filtfilt(b, a, x)
+    return output
 
 
 def butter_bandpass_filter(data, lowcut, highcut, fs, order=4):
