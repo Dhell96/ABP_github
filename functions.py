@@ -196,7 +196,7 @@ def find_peaks_custom(PPG_signal, F1, W1, W2, beta):
 # Assuming you have PPG_signal, F1, F2, W1, W2, beta, and zeta
 # S_peaks = find_peaks(PPG_signal, F1, F2, W1, W2, beta, zeta)
 
-def chebyshev_8th(x, N = 8, fc = [2,59], fs= 125):
+def chebyshev_nth(x, N = 8, fc = [2,59], fs= 125):
     #N = 8                    # Filter order
                # Sampling frequency (Hz)             # Cut-off frequency (Hz)
     rp = 1                   # Passband ripple (dB)
