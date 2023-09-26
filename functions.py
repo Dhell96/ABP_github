@@ -37,7 +37,7 @@ def synchronize_signals(signal1, signal2):
   return synchronized_signal2, time_delay, cross_correlation
 
 
-def synchronize_signals_peaks(s1,s2):
+def synchronize_signals_peaks_old(s1,s2):
     calc_prom_1 = abs(np.median(s1) - np.min(s1))
     calc_prom_2 = abs(np.median(s2) - np.min(s2))
     peaks_1, _ = scipy.signal.find_peaks(s1, prominence=calc_prom_1, distance = 50)
@@ -46,6 +46,15 @@ def synchronize_signals_peaks(s1,s2):
     time_delay = int(np.median(peaks_1[:m] - peaks_2[:m]))
     synchronized_signal2 = np.roll(s2, time_delay)
     return synchronized_signal2, time_delay
+
+def synchronize_signals_peaks(s1,s2):
+    intervals1, peaks_1,_ = find_intervals_and_max_points(+s1)
+    intervals2, peaks_2,_ = find_intervals_and_max_points(+s2)
+    m = np.min([len(peaks_1), len(peaks_2)])
+    time_delay = int(np.median(peaks_1[:m] - peaks_2[:m]))
+    synchronized_signal2 = np.roll(s2, time_delay)
+    return synchronized_signal2, time_delay
+
 
 def gaussian(x, a, b, c):
     return a * np.exp(-np.power(x - b, 2.) / (2 * np.power(c, 2.)))
@@ -254,14 +263,17 @@ def square_signal(signal):
 def moving_average(y, window_size):
     return np.convolve(y, np.ones(window_size) / window_size, mode='same')
 
-def find_intervals_and_max_points(ss, beta, w1=70, w2=200, f1=20,f2=50, lim = 1):
+#(+signal, 0.1, w1 = 20, w2 = 124, lim = 1.2, f1= 0.5, f2 = 50, thr = 0.0)
+def find_intervals_and_max_points(ss, beta = 0.1, w1=20, w2=124, f1=0.5,f2=50, lim = 1.2, thr= 0):
     intervals = []
     max_points = []
     start_idx = None
     
     s = np.array(ss)
     s = butter_bandpass_filter(s, f1, f2, 125)  # Assuming butter_bandpass_filter is defined
-    B = np.maximum(s, 0)
+    #r = np.mean(s) + 1.0*(np.max(s) - np.mean(s))/3.0
+    r=thr
+    B = np.maximum(s, r ) - r
     B = B * B
     MA_peak = moving_average(B, w1)  # Assuming moving_average is defined
     MA_beat = moving_average(B, w2)
@@ -293,4 +305,5 @@ def find_intervals_and_max_points(ss, beta, w1=70, w2=200, f1=20,f2=50, lim = 1)
         intervals.append((start_idx, len(MA_peak) - 1))
         max_points.append(max_idx)
         
-    return intervals, max_points, MA_peak, th1
+    return intervals, max_points, MA_peak, th1, B,s
+
