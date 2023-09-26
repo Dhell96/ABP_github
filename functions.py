@@ -110,6 +110,17 @@ def APPG(vppg, n = 10, f = 15, fs = 125.0, padding = 50):
 
     return filtered[padding + delay: - padding +delay], appg[padding:padding]
 
+def Arterial_Blood_Pressure(signal):
+    intervals, max_points,m,t,b,s = find_intervals_and_max_points(+signal)
+    intervals1, min_points, m1, t1, b1,s1 = find_intervals_and_max_points(-signal)
+    SBP = np.mean(signal[max_points])
+    DBP = np.mean(signal[min_points])
+    eSBP = np.std(signal[max_points])
+    eDBP = np.std(signal[min_points])
+
+    return (SBP, DBP, eSBP, eDBP)
+
+
 def get_SBP_DBP(ABP, prom= 4.2, verbose=0):
     std = np.std(ABP)
     mean = np.mean(ABP)
