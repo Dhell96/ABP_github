@@ -48,8 +48,8 @@ def synchronize_signals_peaks_old(s1,s2):
     return synchronized_signal2, time_delay
 
 def synchronize_signals_peaks(s1,s2):
-    intervals1, peaks_1,_ = find_intervals_and_max_points(+s1)
-    intervals2, peaks_2,_ = find_intervals_and_max_points(+s2)
+    intervals1, peaks_1,m1,t1,b1,s1 = find_intervals_and_max_points(+s1)
+    intervals2, peaks_2,m2,t2,b2,s2 = find_intervals_and_max_points(+s2)
     m = np.min([len(peaks_1), len(peaks_2)])
     time_delay = int(np.median(peaks_1[:m] - peaks_2[:m]))
     synchronized_signal2 = np.roll(s2, time_delay)
