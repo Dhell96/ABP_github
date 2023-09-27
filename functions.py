@@ -314,3 +314,53 @@ def find_intervals_and_max_points(ss, beta = 0.1, w1=20, w2=124, f1=0.5,f2=50, l
         
     return intervals, max_points, MA_peak, th1, B,s
 
+def renorm_0_1(x):
+  xx = np.copy(x)
+  xx= (xx- np.min(xx))/(np.max(xx) - np.min(xx))
+  return xx
+
+def renorm_all(s1):
+    s = np.array(s1)
+    for j in range(s.shape[1]):
+        s[:,j] = renorm_0_1(s[:,j])
+    return s
+
+
+def plot_3channels(s1,xl = (None, None), w = 250, renorm = 0, threshold = 3):
+
+    fig, axs = plt.subplots(3, 1, figsize=(12, 8))
+    
+    s = np.array(s1)
+
+    if renorm ==1:
+        #s[:,0] = renorm_0_1(s[:,0])
+        #s[:,1] = renorm_0_1(s[:,1])
+        #s[:,2] = renorm_0_1(s[:,2])
+        s = renorm_all(s)
+
+    # Plot 'I'
+    axs[0].plot(s[:,0])
+    axs[0].set_title('PLETH Signal')
+    axs[0].set_xlabel('Samples')
+    axs[0].set_ylabel('Amplitude')
+    axs[0].set_xlim(xl)
+    
+    # Plot 'PLETH'
+    axs[1].plot(s[:,1])
+    axs[1].set_title('I Signal')
+    axs[1].set_xlabel('Samples')
+    axs[1].set_ylabel('Amplitude')
+
+    axs[1].set_xlim(xl)
+    
+    # Plot 'ABP'
+    axs[2].plot(s[:,2])
+    axs[2].set_title('ABP Signal')
+    axs[2].set_xlabel('Samples')
+    axs[2].set_ylabel('Amplitude')
+    axs[2].set_xlim(xl)
+    
+    
+    # Show the plot
+    plt.tight_layout()
+    
