@@ -527,9 +527,8 @@ def smooth_signal(data, sample_rate, window_length=None, polyorder=3):
 
 
 
-def new_filter(ex, plotting = 0):
+def new_filter(ex, samp_freq= 125, plotting = 0):
     #let's apply some filters
-    samp_freq = 125
     noisySignal=ex
     noisySignal = zeroing(noisySignal)
     outputSignal = notch(noisySignal, 50, 10)
