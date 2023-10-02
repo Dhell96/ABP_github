@@ -2,6 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import scipy.io
 from scipy import signal
+import json
 
 
 def load_csv_to_dict(file_path):
@@ -364,3 +365,191 @@ def plot_3channels(s1,xl = (None, None), w = 250, renorm = 0, threshold = 3):
     # Show the plot
     plt.tight_layout()
     
+
+
+def extract_data_json(file_path):
+    with open(file_path, 'r') as filee:
+        data = json.load(filee)
+        ecg = np.array(data['ECGSamplesf'])
+        ppg = np.array(data['PPGSamplesREDf'])
+    return ecg, ppg
+
+
+def resample_signal(s, old_fs, new_fs):
+    """
+    Resamples a s from `old_fs` to `new_fs`.
+
+    Args:
+    s (array): The s to resample.
+    old_fs (float): The original sampling frequency of the s.
+    new_fs (float): The desired sampling frequency of the resampled s.
+
+    Returns:
+    array: The resampled s.
+    """
+    n_samples = int(len(s) * new_fs / old_fs)
+    print(len(s))
+    resampled_s = signal.resample(s, n_samples)
+    return resampled_s
+
+
+#let's plot the json fouriers 
+def definitive_fft(si, freq, plotting = 0, xl = (None, None), lab = ""):
+    fourier_N = fourier_plot(si)
+    nyquist_freq = freq / 2
+    t_json_N = np.linspace(0,freq, len(fourier_N))
+    
+    if plotting == 1:
+        
+        plt.plot(t_json_N,zero_one_renorm_single(np.abs(fourier_N)), label = lab)
+        plt.xlim(xl)
+    
+    return t_json_N, zero_one_renorm_single(np.abs(fourier_N))
+
+
+def zeroing(data):
+	val_m=np.mean(data)
+	data[:] = [x -val_m for x in data]
+	return data
+
+
+def notch(noisySignal, notch_freq, Q, samp_freq = 125):
+
+	# Create/view notch filter
+	
+	#notch_freq = 50.0 # Frequency to be removed from signal (Hz)
+	
+	quality_factor = Q # Quality factor
+
+	# Design a notch filter using signal.iirnotch
+	b_notch, a_notch = signal.iirnotch(notch_freq, quality_factor, samp_freq)
+
+	# Compute magnitude response of the designed filter
+	#freq, h = signal.freqz(b_notch, a_notch, fs=samp_freq)
+	
+	return signal.filtfilt(b_notch, a_notch, noisySignal, method="gust")
+
+
+def butter_lowpass_filter(data, cutoff, fs, order=4):
+	b, a = signal.butter(order, cutoff, fs=fs, btype='low', analog=False)
+	y = signal.filtfilt(b, a, data, method="gust")
+	return y
+
+#cutoff: desired cutoff frequency of the filter, Hz
+def LPF( data, cutoff, order, samp_freq = 125):
+		
+	# Filter requirements.
+	fs = samp_freq       # sample rate, Hz  
+
+
+	# Filter the data, and plot both the original and filtered signals.
+	y = butter_lowpass_filter(data, cutoff, fs, order)
+
+	#plt.show()
+	return y
+	
+	
+	
+def HPF(data, cutoff, order, samp_freq):
+	
+	fs = samp_freq       # sample rate, Hz  
+		
+	b, a = signal.butter(order, cutoff, fs=fs, btype='highpass', analog=False)
+	y = signal.filtfilt(b, a, data, method="gust")
+	
+	return y
+
+
+def Hanning_convolution(vector, windowSize):
+	window = np.hanning(windowSize)
+	window = window / window.sum()
+
+	# filter the data using convolution
+	filtered = np.convolve(window, vector, mode='valid')
+	return filtered
+
+
+def smooth_signal(data, sample_rate, window_length=None, polyorder=3):
+    '''smooths given signal using savitzky-golay filter
+
+    Function that smooths data using savitzky-golay filter using default settings.
+
+    Functionality requested by Eirik Svendsen. Added since 1.2.4
+
+    Parameters
+    ----------
+    data : 1d array or list
+        array or list containing the data to be filtered
+
+    sample_rate : int or float
+        the sample rate with which data is sampled
+
+    window_length : int or None
+        window length parameter for savitzky-golay filter, see Scipy.signal.savgol_filter docs.
+        Must be odd, if an even int is given, one will be added to make it uneven.
+        default : 0.1  * sample_rate
+
+    polyorder : int
+        the order of the polynomial fitted to the signal. See scipy.signal.savgol_filter docs.
+        default : 3
+
+    Returns
+    -------
+    smoothed : 1d array
+        array containing the smoothed data
+
+    Examples
+    --------
+    Given a fictional signal, a smoothed signal can be obtained by smooth_signal():
+
+    >>> x = [1, 3, 4, 5, 6, 7, 5, 3, 1, 1]
+    >>> smoothed = smooth_signal(x, sample_rate = 2, window_length=4, polyorder=2)
+    >>> np.around(smoothed[0:4], 3)
+    array([1.114, 2.743, 4.086, 5.   ])
+
+    If you don't specify the window_length, it is computed to be 10% of the 
+    sample rate (+1 if needed to make odd)
+    >>> import heartpy as hp
+    >>> data, timer = hp.load_exampledata(0)
+    >>> smoothed = smooth_signal(data, sample_rate = 100)
+
+    '''
+
+    if window_length == None:
+        window_length = sample_rate // 10
+        
+    if window_length % 2 == 0 or window_length == 0: window_length += 1
+
+    smoothed = signal.savgol_filter(data, window_length = window_length,
+                             polyorder = polyorder)
+
+    return smoothed
+
+
+
+def new_filter(ex, plotting = 0):
+    #let's apply some filters
+    samp_freq = 125
+    noisySignal=ex
+    noisySignal = zeroing(noisySignal)
+    outputSignal = notch(noisySignal, 50, 10)
+
+    #outputSignal = notch(outputSignal, 0.05, 5)
+
+    outputSignal = notch(outputSignal, 0.1, 2) #In order to work together with HPF
+
+    #outputSignal = new_filter.hampel_filter(outputSignal, filtsize=50)
+
+    outputSignal = LPF( outputSignal, 30, order=4)
+
+    outputSignal = HPF( outputSignal, 0.5, order=4)
+
+    outputSignal = Hanning_convolution(outputSignal, int(samp_freq/80))
+
+    #outputSignal = filters.moving_average(outputSignal, int(samp_freq/80))
+
+    outputSignal = smooth_signal(outputSignal, samp_freq,polyorder=8 )
+
+    #_mean= filters.moving_average(outputSignal, int(samp_freq))
+
+    return outputSignal
