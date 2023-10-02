@@ -450,7 +450,7 @@ def LPF( data, cutoff, order, samp_freq = 125):
 	
 	
 	
-def HPF(data, cutoff, order, samp_freq):
+def HPF(data, cutoff, order, samp_freq = 125):
 	
 	fs = samp_freq       # sample rate, Hz  
 		
