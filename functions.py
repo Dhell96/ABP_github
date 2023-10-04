@@ -48,7 +48,7 @@ def synchronize_signals_peaks_old(s1,s2):
     synchronized_signal2 = np.roll(s2, time_delay)
     return synchronized_signal2, time_delay
 
-def synchronize_signals_peaks(s1, s2):
+def synchronize_signals_peaks(s1, s2, plotting = 0):
     intervals1, peaks_1, m1, t1, b1, ss1 = find_intervals_and_max_points(s1)
     intervals2, peaks_2, m2, t2, b2, ss2 = find_intervals_and_max_points(s2)
     m = np.min([len(peaks_1), len(peaks_2)])
@@ -60,12 +60,26 @@ def synchronize_signals_peaks(s1, s2):
     time_delay = int(np.median(peaks_1_array - peaks_2_array))
     synchronized_signal2 = np.roll(s2, time_delay)
     
+    if plotting:
+        plt.figure(figsize=(14,3))
+        plt.plot(s1)
+        plt.plot(peaks_1, s1[peaks_1],"x")
+
+        plt.figure(figsize=(14,3))
+        plt.plot(s2)
+        plt.plot(peaks_2, s2[peaks_2],"x")
+
+        plt.show()
+
+
+
     return synchronized_signal2, time_delay
 
 
 
-def gaussian(x, a, b, c):
-    return a * np.exp(-np.power(x - b, 2.) / (2 * np.power(c, 2.)))
+def gaussian(x, mu, sigma, a = 1):
+    #x, alpha, mu, signa
+    return a *np.exp(-0.5 * ((x - mu) / sigma) ** 2)
 
 def fourier_plot(data):
 
@@ -272,7 +286,7 @@ def moving_average(y, window_size):
     return np.convolve(y, np.ones(window_size) / window_size, mode='same')
 
 #(+signal, 0.1, w1 = 20, w2 = 124, lim = 1.2, f1= 0.5, f2 = 50, thr = 0.0)
-def find_intervals_and_max_points(ss, beta = 0.1, w1=20, w2=124, f1=0.5,f2=50, lim = 1.2, thr= 0):
+def find_intervals_and_max_points_old(ss, beta = 0.1, w1=20, w2=124, f1=0.5,f2=50, lim = 1.2, thr= 0):
     intervals = []
     max_points = []
     start_idx = None
@@ -314,6 +328,55 @@ def find_intervals_and_max_points(ss, beta = 0.1, w1=20, w2=124, f1=0.5,f2=50, l
         max_points.append(max_idx)
         
     return intervals, max_points, MA_peak, th1, B,s
+
+def find_intervals_and_max_points(ss, beta = 0.1, w1=20, w2=124, f1=0.5, f2=50, lim = 1.2, thr= 0, distance = 50):
+    intervals = []
+    max_points = []
+    start_idx = None
+    last_max_idx = None  # Variable to keep track of the index of the last max peak
+    
+    s = np.array(ss)
+    s = butter_bandpass_filter(s, f1, f2, 125)  # Assuming butter_bandpass_filter is defined
+    r = thr
+    B = np.maximum(s, r) - r
+    B = B * B
+    MA_peak = moving_average(B, w1)  # Assuming moving_average is defined
+    MA_beat = moving_average(B, w2)
+    
+    z = np.mean(B)
+    alfa = z * beta
+    th1 = MA_beat + alfa
+    
+    for i in range(len(MA_peak)):
+        if MA_peak[i] > th1[i]:
+            if start_idx is None:
+                start_idx = i
+                max_val = ss[i]
+                max_idx = i
+            else:
+                if ss[i] > max_val:
+                    max_val = ss[i]
+                    max_idx = i
+        else:
+            if start_idx is not None:
+                if i - 1 - start_idx >= w1/lim:  # Check if the interval length is >= w1
+                    if last_max_idx is None or max_idx - last_max_idx >= distance:  # Check the distance condition
+                        intervals.append((start_idx, i - 1))
+                        max_points.append(max_idx)
+                        last_max_idx = max_idx  # Update last_max_idx
+                start_idx = None
+                
+    # Handle the case where the last interval extends to the end of the list
+    if start_idx is not None and len(MA_peak) - 1 - start_idx >= w1:
+        if last_max_idx is None or max_idx - last_max_idx >= distance:  # Check the distance condition
+            intervals.append((start_idx, len(MA_peak) - 1))
+            max_points.append(max_idx)
+        
+    return intervals, max_points, MA_peak, th1, B, s
+
+
+
+
 
 def renorm_0_1(x):
   xx = np.copy(x)
@@ -394,17 +457,22 @@ def resample_signal(s, old_fs, new_fs):
 
 
 #let's plot the json fouriers 
-def definitive_fft(si, freq, plotting = 0, xl = (None, None), lab = ""):
+def definitive_fft(si, freq, plotting = 0, xl = (None, None), lab = "", renorm = 1):
     fourier_N = fourier_plot(si)
     nyquist_freq = freq / 2
     t_json_N = np.linspace(0,freq, len(fourier_N))
     
     if plotting == 1:
-        
-        plt.plot(t_json_N,zero_one_renorm_single(np.abs(fourier_N)), label = lab)
-        plt.xlim(xl)
-    
-    return t_json_N, zero_one_renorm_single(np.abs(fourier_N))
+        if renorm:
+            plt.plot(t_json_N,zero_one_renorm_single(np.abs(fourier_N)), label = lab)
+            plt.xlim(xl)
+        else:
+            plt.plot(t_json_N,np.abs(fourier_N), label = lab)
+            plt.xlim(xl)
+    if renorm:
+        return t_json_N, zero_one_renorm_single(np.abs(fourier_N))
+    else:
+        return t_json_N, np.abs(fourier_N)
 
 
 def zeroing(data):
@@ -552,3 +620,81 @@ def new_filter(ex, samp_freq= 125, plotting = 0):
     #_mean= filters.moving_average(outputSignal, int(samp_freq))
 
     return outputSignal
+
+
+
+
+def find_n_peaks(frequencies, spectrum, n=5):
+    peaks, _ = signal.find_peaks(spectrum, distance=10)
+    sorted_peaks = sorted(peaks, key=lambda x: spectrum[x], reverse=True)[:n]
+    return sorted_peaks
+
+
+def filter_signal(signal, fs, n_peaks=1, band_width=0.45):
+    N = len(signal)
+    freqs = np.fft.fftfreq(N, 1/fs)
+    
+    # Perform FFT and find the n most important peaks
+    fourier_transform = np.fft.fft(signal)
+    spectrum = np.abs(fourier_transform)
+    important_peaks = find_n_peaks(freqs, spectrum, n_peaks)
+    
+    # Generate Gaussian filters
+    filtered_signal_fft = np.zeros(N, dtype=complex)
+    for peak in important_peaks:
+        peak_freq = freqs[peak]
+        g_filter = gaussian(freqs, peak_freq, band_width)
+        filtered_signal_fft += fourier_transform * g_filter
+    
+    # Perform inverse FFT to get filtered signal
+    filtered_signal = np.fft.ifft(filtered_signal_fft)
+    
+    return np.real(filtered_signal)
+
+
+def find_n_peaks_band(frequencies, spectrum, n=1, freq_min=None, freq_max=None):
+    # Create masks based on frequency range
+    mask = np.ones_like(frequencies, dtype=bool)
+    if freq_min is not None:
+        mask &= (frequencies >= freq_min)
+    if freq_max is not None:
+        mask &= (frequencies <= freq_max)
+        
+    # Filter both frequencies and spectrum arrays
+    filtered_frequencies = frequencies[mask]
+    filtered_spectrum = spectrum[mask]
+    
+    # Find peaks on the filtered spectrum
+    peaks, _ = signal.find_peaks(filtered_spectrum)
+    
+    # Sort peaks by magnitude and select the top n
+    sorted_peaks = sorted(peaks, key=lambda x: filtered_spectrum[x], reverse=True)[:n]
+    
+    # Translate back to original indices if needed
+    original_indices = np.where(mask)[0][sorted_peaks]
+    
+    return original_indices
+
+
+
+
+def filter_signal_band(signal, fs, n_peaks=1, band_width=0.20, freq_min=None, freq_max=None):
+    N = len(signal)
+    freqs = np.fft.fftfreq(N, 1/fs)
+    
+    # Perform FFT and find the n most important peaks within the frequency range
+    fourier_transform = np.fft.fft(signal)
+    spectrum = np.abs(fourier_transform)
+    important_peaks = find_n_peaks_band(freqs, spectrum, n_peaks, freq_min, freq_max)
+    
+    # Generate Gaussian filters
+    filtered_signal_fft = np.zeros(N, dtype=complex)
+    for peak in important_peaks:
+        peak_freq = freqs[peak]
+        g_filter = gaussian(freqs, peak_freq, band_width)
+        filtered_signal_fft += fourier_transform * g_filter
+    
+    # Perform inverse FFT to get filtered signal
+    filtered_signal = np.fft.ifft(filtered_signal_fft)
+    
+    return np.real(filtered_signal)
