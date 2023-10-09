@@ -711,7 +711,7 @@ def add_gaussian_noise(signal, variance):
 def add_jitter(signal, amount):
     jitter = np.random.normal(0, amount, signal.shape[0])
     x = np.arange(signal.shape[0])
-    new_signal = scipy.interp.interp1d(x + jitter, signal, axis=0, bounds_error=False, fill_value="extrapolate")(x)
+    new_signal = scipy.interpolate.interp1d(x + jitter, signal, axis=0, bounds_error=False, fill_value="extrapolate")(x)
     return new_signal
 
 
