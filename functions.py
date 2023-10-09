@@ -715,3 +715,11 @@ def add_jitter(signal, amount):
     return new_signal
 
 
+def add_sine_noise(data, frequency, amplitude, sample_rate, phase=0):
+    # Generate time values
+    t = np.arange(0, len(data)/sample_rate, 1/sample_rate)
+    # Generate the sine wave
+    sine_wave = amplitude * np.sin(2 * np.pi * frequency * t + phase)
+    # Add the sine wave to the data
+    noisy_data = data + sine_wave[:len(data)]
+    return noisy_data
