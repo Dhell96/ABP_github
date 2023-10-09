@@ -435,7 +435,9 @@ def extract_data_json(file_path):
         data = json.load(filee)
         ecg = np.array(data['ECGSamplesf'])
         ppg = np.array(data['PPGSamplesREDf'])
-    return ecg, ppg
+        ecg_nf = np.array(data['ECGSamples'])
+        ppg_nf = np.array(data['PPGSamplesRED'])
+    return ecg, ppg, ecg_nf, ppg_nf
 
 
 def resample_signal(s, old_fs, new_fs):
@@ -652,7 +654,7 @@ def filter_signal(signal, fs, n_peaks=1, band_width=0.45):
     return np.real(filtered_signal)
 
 
-def find_n_peaks_band(frequencies, spectrum, n=1, freq_min=None, freq_max=None):
+def find_n_peaks_band(frequencies, spectrum, n=1, freq_min=None, freq_max=None, dist = 10):
     # Create masks based on frequency range
     mask = np.ones_like(frequencies, dtype=bool)
     if freq_min is not None:
@@ -665,7 +667,7 @@ def find_n_peaks_band(frequencies, spectrum, n=1, freq_min=None, freq_max=None):
     filtered_spectrum = spectrum[mask]
     
     # Find peaks on the filtered spectrum
-    peaks, _ = signal.find_peaks(filtered_spectrum)
+    peaks, _ = signal.find_peaks(filtered_spectrum, distance = dist)
     
     # Sort peaks by magnitude and select the top n
     sorted_peaks = sorted(peaks, key=lambda x: filtered_spectrum[x], reverse=True)[:n]
@@ -698,3 +700,18 @@ def filter_signal_band(signal, fs, n_peaks=1, band_width=0.20, freq_min=None, fr
     filtered_signal = np.fft.ifft(filtered_signal_fft)
     
     return np.real(filtered_signal)
+
+
+
+def add_gaussian_noise(signal, variance):
+    noise = np.random.randn(*signal.shape) * variance
+    return signal + noise
+
+
+def add_jitter(signal, amount):
+    jitter = np.random.normal(0, amount, signal.shape[0])
+    x = np.arange(signal.shape[0])
+    new_signal = scipy.interp.interp1d(x + jitter, signal, axis=0, bounds_error=False, fill_value="extrapolate")(x)
+    return new_signal
+
+
