@@ -5,6 +5,8 @@ from scipy import signal
 import json
 import os
 from scipy.interpolate import interp1d
+from scipy.signal import find_peaks, correlate
+from scipy import interpolate
 
 def load_csv_to_dict(file_path):
     # Load the CSV file with numpy.genfromtxt
@@ -870,3 +872,82 @@ def normalize_peaks_mins(signal, n_signal = 0, plotting = 0, kind = "quadratic")
         plt.show()
 
     return normalized_signal
+
+
+
+
+
+def simplify_ECGs(r):
+
+  #r = functions.normalize_peaks_mins(r)
+  r = functions.butter_bandpass_filter(r, 0.5, 60, 125)
+  
+
+  s1 = functions.zero_one_renorm_single(np.maximum(functions.z_renorm(r), 0))
+  r_peaks, _ = find_peaks(s1, distance=125*0.6, height=np.max(s1)*0.5)
+
+  secondary_peaks = []
+
+
+  # Define the segment of the signal between two R-peaks
+
+  segment = s1[0:r_peaks[0]]
+  peaks, _ = find_peaks(segment, distance = 5)
+  d = 0
+  peak_heights = segment[peaks]
+  if len(peak_heights) > 2:
+        two_highest = peaks[np.argsort(peak_heights)[-2:]] + d # Get indices of the two highest peaks
+  else:
+      two_highest = peaks + d # If there are two or less, take all
+
+  secondary_peaks.extend(two_highest)
+
+
+
+
+  for P in range(len(r_peaks) -1 ):
+
+    segment = s1[r_peaks[P]:r_peaks[P + 1]]
+    peaks, _ = find_peaks(segment, distance = 5)
+    d = r_peaks[P]
+    peak_heights = segment[peaks]
+    if len(peak_heights) > 2:
+        two_highest = peaks[np.argsort(peak_heights)[-2:]] + d # Get indices of the two highest peaks
+    else:
+        two_highest = peaks + d # If there are two or less, take all
+
+    secondary_peaks.extend(two_highest)
+
+
+  segment = s1[r_peaks[-1]:]
+  peaks, _ = find_peaks(segment, distance = 5)
+  d = r_peaks[-1]
+  peak_heights = segment[peaks]
+  if len(peak_heights) > 2:
+        two_highest = peaks[np.argsort(peak_heights)[-2:]] + d # Get indices of the two highest peaks
+  else:
+      two_highest = peaks + d # If there are two or less, take all
+
+  secondary_peaks.extend(two_highest)
+
+  secondary_peaks.extend([0])
+  secondary_peaks.extend([len(r)-1])
+
+  all_peaks = np.sort(np.concatenate((np.array(r_peaks), np.array(secondary_peaks))))
+
+  # Calculate midpoints between adjacent elements in all_peaks
+  midpoints = (all_peaks[:-1] + all_peaks[1:]) // 2
+
+  # Create a new array with space for the original values, midpoints, and zeroes
+  expanded_peaks_with_zeros = np.zeros(len(all_peaks) + len(midpoints), dtype=all_peaks.dtype)
+
+  # Place the original all_peaks values and midpoints into the new array
+  expanded_peaks_with_zeros[::2] = all_peaks
+  expanded_peaks_with_zeros[1::2] = midpoints
+
+  f = interpolate.interp1d(expanded_peaks_with_zeros, s1[expanded_peaks_with_zeros], kind='linear')
+  x_new = np.arange(0, len(r))
+  y_new = f(x_new)
+
+  # expanded_peaks_with_zeros now contains the original points, with midpoints in between
+  return y_new, expanded_peaks_with_zeros, r_peaks
