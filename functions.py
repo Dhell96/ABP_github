@@ -3,7 +3,8 @@ import matplotlib.pyplot as plt
 import scipy.io
 from scipy import signal
 import json
-
+import os
+from scipy.interpolate import interp1d
 
 def load_csv_to_dict(file_path):
     # Load the CSV file with numpy.genfromtxt
@@ -453,28 +454,33 @@ def resample_signal(s, old_fs, new_fs):
     array: The resampled s.
     """
     n_samples = int(len(s) * new_fs / old_fs)
-    print(len(s))
+    #print(len(s))
     resampled_s = signal.resample(s, n_samples)
     return resampled_s
 
 
 #let's plot the json fouriers 
-def definitive_fft(si, freq, plotting = 0, xl = (None, None), lab = "", renorm = 1):
+def definitive_fft(si, freq, plotting = 0, xl = (None, None), lab = "", renorm = 1, alpha = 1.0, squared = 1):
     fourier_N = fourier_plot(si)
     nyquist_freq = freq / 2
     t_json_N = np.linspace(0,freq, len(fourier_N))
+
+    if squared:
+        fourier_N = fourier_N*fourier_N
     
+    
+
     if plotting == 1:
         if renorm:
-            plt.plot(t_json_N,zero_one_renorm_single(np.abs(fourier_N)), label = lab)
+            plt.plot(t_json_N,zero_one_renorm_single(np.abs(fourier_N)), label = lab, alpha= alpha)
             plt.xlim(xl)
         else:
-            plt.plot(t_json_N,np.abs(fourier_N), label = lab)
+            plt.plot(t_json_N,np.abs(fourier_N), label = lab, alpha= alpha)
             plt.xlim(xl)
     if renorm:
         return t_json_N, zero_one_renorm_single(np.abs(fourier_N))
     else:
-        return t_json_N, np.abs(fourier_N)
+        return t_json_N, 2.0*(freq*len(fourier_N))
 
 
 def zeroing(data):
@@ -723,3 +729,144 @@ def add_sine_noise(data, frequency, amplitude, sample_rate, phase=0):
     # Add the sine wave to the data
     noisy_data = data + sine_wave[:len(data)]
     return noisy_data
+
+
+def resize_signal(x, fs, duration1, duration2):
+    #x:intero segnale
+    #fs: frquenza di campionamento
+    #duration1: durata originale
+    #duration2: nuova durata
+    points = len(x)
+    t1 = np.linspace(0, duration1, int(fs*duration1), endpoint=False)
+    t2 = np.linspace(0, duration2, int(fs*duration2), endpoint=False)
+    x_resampled = scipy.signal.resample(x, int(fs*duration2))
+    #plt.plot(x, label='Original')
+    #plt.plot(x_resampled, label='Shifted')
+    #plt.legend()
+    #plt.show()
+    return x_resampled
+
+
+
+
+def calculate_CSP_index(psd_values, f_index):
+    return sum(psd_values[:f_index + 1])
+
+
+
+def calculate_CSP_frequence(psd_values, fs, f):
+    N_s = int(len(psd_values)/2.0)
+    f_max = fs/2.0
+    if isinstance(f, (int, float)):  # Single frequency value
+        f_index = int((N_s * f) / f_max)
+        return calculate_CSP_index(psd_values, f_index)
+    elif isinstance(f, (list, tuple, np.ndarray)):  # Array of frequency values
+        csp_values = []
+        for freq in f:
+            f_index = int((N_s * freq) / f_max)
+            csp_values.append(calculate_CSP_index(psd_values, f_index))
+        return csp_values
+    
+
+import numpy as np
+
+def find_closest_x(y_values, x_values, target_y):
+    """
+    Find the x value(s) that correspond to the closest y value(s) to the target_y.
+    
+    Parameters:
+    y_values (list or np.array): Array of y values
+    x_values (list or np.array): Array of x values
+    target_y (float, list, tuple, np.array): The y value(s) for which you want to find the corresponding x value(s)
+    
+    Returns:
+    float or list: The x value(s) corresponding to the closest y value(s) to target_y
+    """
+    
+    y_arr = np.array(y_values)
+    
+    if isinstance(target_y, (int, float)):  # Single target_y value
+        closest_y_index = np.argmin(np.abs(y_arr - target_y))
+        return x_values[closest_y_index]
+    
+    elif isinstance(target_y, (list, tuple, np.ndarray)):  # Array of target_y values
+        closest_x_values = []
+        for ty in target_y:
+            closest_y_index = np.argmin(np.abs(y_arr - ty))
+            closest_x_values.append(x_values[closest_y_index])
+        return closest_x_values
+
+
+def find_files_extension(hyper_folder, ext):
+    matching_filenames = []
+
+# Iterate through all files in the specified directory
+    for filename in os.listdir(hyper_folder):
+        # Check if the file has a .json extension
+        if filename.endswith(ext):
+            matching_filenames.append(filename)
+
+    return matching_filenames
+
+
+
+def normalize_peaks_mins(signal, n_signal = 0, plotting = 0, kind = "quadratic"):
+    #if n_signal == 0:
+    #    intervals, max_points,_,_ = find_intervals_and_max_points(signal, 0.02, w1 = 25, w2 = 230, f1= 0.5, f2= 8, lim=1.2)
+    #    intervals, min_points,_,_ = find_intervals_and_max_points(-signal, 0.02, w1 = 25, w2 = 230, f1= 0.5, f2= 8, lim=1.2)
+    #if n_signal==1:
+    #    intervals, max_points,_,_ = find_intervals_and_max_points(signal, 0.02, w1 = 12, w2 = 124, lim = 1.2, f1= 20, f2 = 50)
+    #    intervals, min_points,_,_ = find_intervals_and_max_points(-signal, 0.02, w1 = 12, w2 = 124, lim = 1.2, f1= 20, f2 = 50)   
+
+    #if n_signal==2:
+    #    intervals, max_points,_,_ = find_intervals_and_max_points(signal, 0.02, w1 = 20, w2 = 230, f1= 0.5, f2= 8, lim = 1.2)
+    #    intervals, min_points,_,_ = find_intervals_and_max_points(-signal, 0.02, w1 = 20, w2 = 230, f1= 0.5, f2= 8, lim = 1.2) 
+
+    intervals, max_points,_,_,_,_ = find_intervals_and_max_points(signal, 0.02, w1 = 20, w2 = 124, lim = 1.2, f1= 0.5, f2 = 30, thr = 0.0)
+    intervals, min_points,_,_,_,_ = find_intervals_and_max_points(-signal, 0.02, w1 = 20, w2 = 124, lim = 1.2, f1= 0.5, f2 = 30, thr = 0.0)
+
+
+
+    # Generate a sample signal
+    x = np.linspace(0, len(signal), len(signal))
+    y = signal
+
+    # Interpolate to find the envelope
+    max_interp = interp1d(x[max_points], y[max_points], kind=kind, fill_value='extrapolate')
+    min_interp = interp1d(x[min_points], y[min_points], kind=kind, fill_value='extrapolate')
+
+    max_envelope = max_interp(x)
+    min_envelope = min_interp(x)
+
+
+
+    # Interpolate to find the envelope
+    #max_spline = CubicSpline(x[max_points], y[max_points])
+    #min_spline = CubicSpline(x[min_points], y[min_points])
+
+    #max_envelope = max_spline(x)
+    #min_envelope = min_spline(x)
+
+    # Normalize the signal
+    normalized_signal = (y - min_envelope) / (max_envelope - min_envelope)
+
+    if plotting:
+
+        # Plotting
+        plt.figure(figsize=(14, 6))
+        plt.subplot(2, 1, 1)
+        plt.plot(x, y, label='Original Signal')
+        plt.plot(x, max_envelope, '--', label='Max Envelope')
+        plt.plot(x, min_envelope, '--', label='Min Envelope')
+        print(max_points)
+        plt.plot(max_points, signal[max_points],"x")
+        plt.plot(min_points, signal[min_points],"o")
+        plt.legend()
+
+        plt.subplot(2, 1, 2)
+        plt.plot(x, normalized_signal, label='Normalized Signal')
+        plt.legend()
+
+        plt.show()
+
+    return normalized_signal
