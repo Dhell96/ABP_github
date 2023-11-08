@@ -880,10 +880,10 @@ def normalize_peaks_mins(signal, n_signal = 0, plotting = 0, kind = "quadratic")
 def simplify_ECGs(r):
 
   #r = functions.normalize_peaks_mins(r)
-  r = functions.butter_bandpass_filter(r, 0.5, 60, 125)
+  r = butter_bandpass_filter(r, 0.5, 60, 125)
   
 
-  s1 = functions.zero_one_renorm_single(np.maximum(functions.z_renorm(r), 0))
+  s1 = zero_one_renorm_single(np.maximum(z_renorm(r), 0))
   r_peaks, _ = find_peaks(s1, distance=125*0.6, height=np.max(s1)*0.5)
 
   secondary_peaks = []
