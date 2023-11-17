@@ -871,7 +871,7 @@ def normalize_peaks_mins(signal, n_signal = 0, plotting = 0, kind = "quadratic")
 
         plt.show()
 
-    return normalized_signal
+    return normalized_signal, max_envelope, min_envelope
 
 
 
