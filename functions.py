@@ -155,7 +155,7 @@ def Arterial_Blood_Pressure(signal):
     return (SBP, DBP, eSBP, eDBP)
 
 
-def get_SBP_DBP(ABP, prom= 4.2, verbose=0):
+def get_SBP_DBP(ABP, prom= 4.2, verbose=0, points = 0):
     std = np.std(ABP)
     mean = np.mean(ABP)
     #calcoliamo picchi
@@ -173,7 +173,10 @@ def get_SBP_DBP(ABP, prom= 4.2, verbose=0):
         plt.plot(ABP)
         plt.plot(peaks_max_location, ABP[peaks_max_location], "x")
         plt.plot(peaks_min_location, ABP[peaks_min_location], "x")
-    return (sbp, dbp, error_sbp, error_dbp)
+    if points == 0:
+        return (sbp, dbp, error_sbp, error_dbp)
+    if points ==1:
+        return (sbp, dbp, error_sbp, error_dbp, [peaks_max_location, ABP[peaks_max_location]],[peaks_min_location, ABP[peaks_min_location]])
 
 def find_peaks_valleys(x, prom = 0.5):
      if len(x)<1000:
