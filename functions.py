@@ -954,3 +954,22 @@ def simplify_ECGs(r):
 
   # expanded_peaks_with_zeros now contains the original points, with midpoints in between
   return y_new, expanded_peaks_with_zeros, r_peaks
+
+
+def calculate_hr(ecg_data, sampling_rate=125):
+    # Assume ecg_data is a 1D numpy array containing ECG signal values.
+
+    # Step 1: Preprocess (optional for simplification)
+    # Here, you might apply filtering to ecg_data if needed.
+
+    # Step 2: Detect R-peaks
+    # This is a simplistic approach; for better results, consider more sophisticated algorithms.
+    # Adjust the height and distance based on your ECG data characteristics.
+    peaks, _ = find_peaks(ecg_data, height=np.max(ecg_data)/2, distance=sampling_rate/2)
+
+    # Step 3: Calculate the heart rate
+    num_peaks = len(peaks)
+    duration_in_minutes = 8 / 60  # 8 seconds expressed in minutes
+    heart_rate = num_peaks / duration_in_minutes
+
+    return heart_rate, peaks
