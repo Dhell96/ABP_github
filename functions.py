@@ -969,7 +969,7 @@ def calculate_hr(ecg_data,time, sampling_rate=125):
 
     # Step 3: Calculate the heart rate
     num_peaks = len(peaks)
-    duration_in_minutes = time / 60  # 8 seconds expressed in minutes
+    duration_in_minutes = (len(ecg_data)/sampling_rate) / 60  # 8 seconds expressed in minutes
     heart_rate = num_peaks / duration_in_minutes
 
     return heart_rate, peaks
