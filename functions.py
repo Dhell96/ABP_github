@@ -965,7 +965,7 @@ def calculate_hr(ecg_data, sampling_rate=125):
     # Step 2: Detect R-peaks
     # This is a simplistic approach; for better results, consider more sophisticated algorithms.
     # Adjust the height and distance based on your ECG data characteristics.
-    peaks, _ = find_peaks(ecg_data, height=np.max(ecg_data)/2, distance=sampling_rate/2)
+    peaks, _ = find_peaks(ecg_data, distance=sampling_rate/2)
 
     # Step 3: Calculate the heart rate
     num_peaks = len(peaks)
