@@ -956,7 +956,7 @@ def simplify_ECGs(r):
   return y_new, expanded_peaks_with_zeros, r_peaks
 
 
-def calculate_hr(ecg_data,time, sampling_rate=125):
+def calculate_hr(ecg_data, sampling_rate=125):
     # Assume ecg_data is a 1D numpy array containing ECG signal values.
 
     # Step 1: Preprocess (optional for simplification)
