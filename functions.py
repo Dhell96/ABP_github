@@ -1047,3 +1047,82 @@ def segment_around_r_peaks(ecg_signal, r_peaks, sampling_rate=500, window_ms=750
 # ecg_signal = np.array([...])  # Your ECG signal array
 # r_peaks = np.array([...])  # The indices of R peaks in the ECG signal
 # representative_heartbeat = segment_around_r_peaks(ecg_signal, r_peaks)
+
+
+
+
+def gradient_varying_weighting(ecg_signal, k, d):
+
+    """
+    Apply the gradient varying weighting function to an ECG signal for baseline wandering correction.
+
+    Parameters:
+    ecg_signal (np.array): The raw ECG signal.
+    k (int): The window size for computing the gradient around each sample.
+    d (float): A constant to balance the influence of the gradient.
+
+    Returns:
+    np.array: The weighted ECG signal.
+    """
+    
+    ecg_signal = ecg_signal
+
+    # Initialize the weights array with the same length as the ECG signal
+    weights = np.zeros_like(ecg_signal)
+
+    # Calculate the weights for each point in the signal
+    for n in range(k, len(ecg_signal) - k):
+        gradient = abs(ecg_signal[n + k] - ecg_signal[n - k])
+        weights[n] = 1 / (d + gradient)
+
+    # Normalize weights to preserve the original signal amplitude
+    #weights = weights / np.max(weights)
+
+    # Apply the weights to the ECG signal
+    #weighted_signal = ecg_signal * weights
+
+    return weights
+
+# Example usage:
+# Assuming we have an ECG signal in a NumPy array `ecg_signal`,
+# a window size `k`, and a constant `d`:
+# weighted_ecg = gradient_varying_weighting(ecg_signal, k=10, d=0.1)
+
+# Please provide the actual ECG signal data and the parameters `k` and `d` to proceed with the example.
+
+
+
+def calculate_baseline(ecg_signal, weights, omega):
+    """
+    Calculate the baseline of an ECG signal using the gradient varying weighting function.
+
+    Parameters:
+    ecg_signal (np.array): The ECG signal from which to calculate the baseline.
+    weights (np.array): The weights calculated from the gradient varying weighting function.
+    omega (int): The window size for the baseline calculation.
+
+    Returns:
+    np.array: The estimated baseline of the ECG signal.
+    """
+    # Initialize the baseline array with the same length as the ECG signal
+    baseline = np.zeros_like(ecg_signal)
+
+    # Calculate the baseline for each point in the signal
+    for n in range(omega // 2, len(ecg_signal) - omega // 2):
+        numerator_sum = 0
+        denominator_sum = 0
+        for m in range(n - omega // 2, n + omega // 2 + 1):
+            cosine_term = np.cos(np.pi * (n - m) / omega)
+            numerator_sum += ecg_signal[m] * weights[m] * cosine_term
+            denominator_sum += weights[m] * cosine_term
+
+        baseline[n] = numerator_sum / denominator_sum if denominator_sum != 0 else 0
+
+    return baseline
+
+# Example usage:
+# Assuming we have an ECG signal `ecg_signal`, the weights `weights` from the gradient varying weighting function,
+# and the window size `omega` for baseline calculation:
+# baseline = calculate_baseline(ecg_signal, weights, omega=50)
+
+# The actual ECG data, weights, and omega value are needed to run this example.
