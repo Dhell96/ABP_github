@@ -1216,11 +1216,11 @@ def analyze_ecg_segments(segments, iqr_multiplier=1.5, verbose=False):
     return new_mean_ecg
 
 
-def final_mean_waveform(ECG, h_p = 0.4, dist = 0.4, OM=1, peak_h=1, iqr_mult = 1.5):
+def final_mean_waveform(ECG, h_p = 0.4, dist = 0.4, OM=1, peak_h=1, iqr_mult = 1.5, sampling_rate=125, window_ms=750, offset_ms=300):
     R_peaks, Hs = find_r_peaks(ECG, h_p = h_p, dist=dist, OM=OM, peak_heights=peak_h)
     #plt.plot(ECG)
     #plt.plot(R_peaks, ECG[R_peaks],"x")
-    representative_heartbeat, segments = segment_around_r_peaks(ECG, R_peaks, sampling_rate=125)
+    representative_heartbeat, segments = segment_around_r_peaks(ECG, R_peaks, sampling_rate=125, sampling_rate=sampling_rate, window_ms=window_ms, offset_ms=offset_ms)
     #print(len(segments))
     segments = np.array(segments)
     ECG_MEDIO = analyze_ecg_segments(segments, iqr_mult, False)
