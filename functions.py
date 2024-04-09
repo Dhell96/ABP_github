@@ -1126,3 +1126,85 @@ def calculate_baseline(ecg_signal, weights, omega):
 # baseline = calculate_baseline(ecg_signal, weights, omega=50)
 
 # The actual ECG data, weights, and omega value are needed to run this example.
+
+
+
+
+
+def analyze_ecg_segments(segments, iqr_multiplier=1.5, verbose=False):
+    """
+    Analyze ECG segments to find the mean ECG excluding outliers. If all segments are outliers,
+    the IQR multiplier is increased incrementally until at least 2 segments survive.
+
+    :param segments: A numpy array of ECG segments.
+    :param iqr_multiplier: Initial multiplier used in the IQR method for outlier detection. Default is 1.5.
+    :param verbose: If True, plot graphs and print information. Default is False.
+    :return: The mean ECG calculated from non-outlier segments.
+    """
+
+    def calculate_iqr(data, multiplier=1.5):
+        """Calculate lower and upper bounds based on IQR."""
+        Q1 = np.percentile(data, 25)
+        Q3 = np.percentile(data, 75)
+        IQR = Q3 - Q1
+        return Q1 - multiplier * IQR, Q3 + multiplier * IQR
+
+    while True:
+        # Calculate the initial mean and standard deviation
+        initial_mean_ecg = np.mean(segments, axis=0)
+        std_ecg = np.std(segments, axis=0)
+
+        # Identify outliers based on IQR
+        outlier_indexes = []
+        for i, segment in enumerate(segments):
+            for j, point in enumerate(segment):
+                lower_bound, upper_bound = calculate_iqr(segments[:, j], iqr_multiplier)
+                if point < lower_bound or point > upper_bound:
+                    outlier_indexes.append(i)
+                    break
+
+        # Check if enough segments have survived
+        if len(segments) - len(outlier_indexes) >= 2:
+            break
+        else:
+            iqr_multiplier += 0.5  # Increment the IQR multiplier
+
+    # Exclude outlier segments
+    non_outlier_segments = np.delete(segments, outlier_indexes, axis=0)
+
+    # Recalculate the mean ECG using only non-outlier segments
+    new_mean_ecg = np.mean(non_outlier_segments, axis=0)
+
+    # Plotting and verbose output
+    if verbose:
+        # Plot initial segments with outliers highlighted
+        plt.figure(figsize=(10, 6))
+        for segment in segments:
+            plt.plot(segment, color='lightgray', lw=0.5)
+        for i in outlier_indexes:
+            plt.plot(segments[i], color='red', lw=1, linestyle='--')
+        plt.plot(initial_mean_ecg, color='blue', label='Initial Mean ECG')
+        plt.title('ECG Segments with Outliers Highlighted')
+        plt.xlabel('Time Points')
+        plt.ylabel('ECG Signal')
+        plt.legend()
+        plt.show()
+
+        # Plot non-outlier segments and the new mean ECG
+        plt.figure(figsize=(10, 6))
+        for segment in non_outlier_segments:
+            plt.plot(segment, color='lightgray', lw=1)
+        plt.plot(new_mean_ecg, color='blue', label='New Mean ECG')
+        plt.title('Non-Outlier ECG Segments and New Mean ECG')
+        plt.xlabel('Time Points')
+        plt.ylabel('ECG Signal')
+        plt.legend()
+        plt.show()
+
+        print("Indexes of outlier segments:", outlier_indexes)
+
+    print(iqr_multiplier)
+
+    return new_mean_ecg
+
+
