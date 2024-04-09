@@ -996,13 +996,16 @@ def find_r_peaks(ecg_corrected, dist=0.6, h_p=0.5, freq=125, OM=50, peak_heights
     np.array (optional): Heights of the R-peaks, returned if peak_heights is set to 1.
     """
     # Find peaks using the specified minimum distance and height criteria
+    old_min_max = np.abs(np.max(ecg_corrected) - np.min(ecg_corrected))
     s1 = zero_one_renorm_single(np.maximum(z_renorm(ecg_corrected), 0))
+    new_min_max = np.abs(np.max(s1) - np.min(s1))
+    print(old_min_max, new_min_max)
     s1[0:OM] = 0
     s1[-OM:] = 0
     peaks, properties = find_peaks(s1, distance=freq*dist, height=np.max(s1)*h_p)
     
     if peak_heights == 1:
-        return peaks, ecg_corrected[peaks]#properties["peak_heights"]
+        return peaks, properties["peak_heights"]*(old_min_max/new_min_max)
     else:
         return peaks
 
