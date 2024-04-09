@@ -973,3 +973,50 @@ def calculate_hr(ecg_data, sampling_rate=125):
     heart_rate = num_peaks / duration_in_minutes
 
     return heart_rate, peaks
+
+
+
+
+
+
+
+import numpy as np
+
+def segment_around_r_peaks(ecg_signal, r_peaks, sampling_rate=500, window_ms=750, offset_ms=300):
+
+    n_peaks = len(r_peaks)
+    #window_ms = np.minimum(1000*(len(ecg_signal)/sampling_rate)/n_peaks,1000)
+
+    window_samples = int(window_ms * sampling_rate / 1000)
+    offset_samples = int(offset_ms * sampling_rate / 1000)
+    edge_threshold = int(20 * sampling_rate / 1000)  # 20 ms in samples
+
+    print(window_ms)
+
+
+    # Filter out R peaks too close to the signal edges
+    r_peaks = [r for r in r_peaks if r >= offset_samples and r <= len(ecg_signal) - (window_samples - offset_samples)]
+
+    #segments_index = []
+    segments = []
+    for r_peak in r_peaks:
+        start = r_peak - offset_samples
+        end = start + window_samples
+
+        segment = ecg_signal[start:end]
+        segments.append(segment)
+        #segments_index.append([start, end])
+
+
+
+    
+    # Stack and average the segments
+    stacked_segments = np.vstack(segments)
+    average_segment = np.mean(stacked_segments, axis=0)
+
+    return average_segment, segments
+
+# Example usage:
+# ecg_signal = np.array([...])  # Your ECG signal array
+# r_peaks = np.array([...])  # The indices of R peaks in the ECG signal
+# representative_heartbeat = segment_around_r_peaks(ecg_signal, r_peaks)
