@@ -977,10 +977,37 @@ def calculate_hr(ecg_data, sampling_rate=125):
 
 
 
+def find_r_peaks(ecg_corrected, dist = 0.6, h_p=0.5, freq = 125, OM = 50):
+    """
+    Find the R-peaks in the corrected ECG signal.
+
+    Parameters:
+    ecg_corrected (np.array): The ECG signal after baseline correction.
+    distance (int): The minimum distance between successive peaks (in samples). This can be estimated based on 
+                    the expected minimum distance between heartbeats in the sample rate.
+    height (float): The minimum height of a peak. This can be determined based on the noise level of the signal 
+                    and the expected minimum amplitude of R-peaks.
+
+    Returns:
+    np.array: Indices of the R-peaks within the ECG signal.
+    """
+    # Find peaks using the specified minimum distance and height criteria
+    s1 = zero_one_renorm_single(np.maximum(z_renorm(ecg_corrected), 0))
+    s1[0:OM]=0
+    s1[-OM:] = 0
+    peaks, _ = find_peaks(s1, distance=freq*dist, height=np.max(s1)*h_p)
+    return peaks
+
+# Example usage:
+# Assuming we have a corrected ECG signal `ecg_corrected`, and we know the minimum distance between R-peaks
+# and the minimum height of an R-peak:
+# r_peaks = find_r_peaks(ecg_corrected, distance=200, height=0.5)
+
+# The actual corrected ECG data, distance, and height values are needed to run this example.
 
 
 
-import numpy as np
+
 
 def segment_around_r_peaks(ecg_signal, r_peaks, sampling_rate=500, window_ms=750, offset_ms=300):
 
