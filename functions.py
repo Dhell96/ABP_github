@@ -1002,7 +1002,7 @@ def find_r_peaks(ecg_corrected, dist=0.6, h_p=0.5, freq=125, OM=50, peak_heights
     peaks, properties = find_peaks(s1, distance=freq*dist, height=np.max(s1)*h_p)
     
     if peak_heights == 1:
-        return peaks, properties["peak_heights"]
+        return peaks, ecg_corrected[peaks]#properties["peak_heights"]
     else:
         return peaks
 
