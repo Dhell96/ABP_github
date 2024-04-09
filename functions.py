@@ -976,35 +976,40 @@ def calculate_hr(ecg_data, sampling_rate=125):
 
 
 
+import numpy as np
+from scipy.signal import find_peaks
 
-def find_r_peaks(ecg_corrected, dist = 0.6, h_p=0.5, freq = 125, OM = 50):
+def find_r_peaks(ecg_corrected, dist=0.6, h_p=0.5, freq=125, OM=50, peak_heights=0):
     """
-    Find the R-peaks in the corrected ECG signal.
+    Find the R-peaks in the corrected ECG signal and optionally their heights.
 
     Parameters:
     ecg_corrected (np.array): The ECG signal after baseline correction.
-    distance (int): The minimum distance between successive peaks (in samples). This can be estimated based on 
-                    the expected minimum distance between heartbeats in the sample rate.
-    height (float): The minimum height of a peak. This can be determined based on the noise level of the signal 
-                    and the expected minimum amplitude of R-peaks.
+    dist (float): The minimum distance between successive peaks in seconds. Default is 0.6 seconds.
+    h_p (float): The minimum height of a peak as a proportion of the maximum peak height. Default is 0.5.
+    freq (int): The sampling frequency of the ECG signal. Default is 125 Hz.
+    OM (int): Offset margin to zero out the beginning and end of the signal to avoid edge effects.
+    peak_heights (int): If set to 1, the function also returns the heights of the R-peaks.
 
     Returns:
     np.array: Indices of the R-peaks within the ECG signal.
+    np.array (optional): Heights of the R-peaks, returned if peak_heights is set to 1.
     """
     # Find peaks using the specified minimum distance and height criteria
     s1 = zero_one_renorm_single(np.maximum(z_renorm(ecg_corrected), 0))
-    s1[0:OM]=0
+    s1[0:OM] = 0
     s1[-OM:] = 0
-    peaks, _ = find_peaks(s1, distance=freq*dist, height=np.max(s1)*h_p)
-    return peaks
+    peaks, properties = find_peaks(s1, distance=freq*dist, height=np.max(s1)*h_p)
+    
+    if peak_heights == 1:
+        return peaks, properties["peak_heights"]
+    else:
+        return peaks
 
-# Example usage:
+# Example usage with peak_heights:
 # Assuming we have a corrected ECG signal `ecg_corrected`, and we know the minimum distance between R-peaks
 # and the minimum height of an R-peak:
-# r_peaks = find_r_peaks(ecg_corrected, distance=200, height=0.5)
-
-# The actual corrected ECG data, distance, and height values are needed to run this example.
-
+# r_peaks, r_peak_heights = find_r_peaks(ecg_corrected, dist=0.6, h_p=0.5, freq=125, OM=50, peak_heights=1)
 
 
 
