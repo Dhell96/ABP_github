@@ -1140,9 +1140,7 @@ def calculate_baseline(ecg_signal, weights, omega):
 def calculate_iqr(data, multiplier=1.5):
     """Calculate lower and upper bounds based on IQR."""
 
-    #Q1,Q3 = np.quantile(data, [0.25, 0.75])
-    Q1,Q3 = np.nanpercentile(data, [25, 50])
-    #Q3 = np.nanpercentile(data, 0.75)
+    Q1,Q3 = np.quantile(data, [0.25, 0.75])
     #Q1 = np.percentile(data, 25)
     #Q3 = np.percentile(data, 75)
     IQR = Q3 - Q1
