@@ -7,7 +7,6 @@ import os
 from scipy.interpolate import interp1d
 from scipy.signal import find_peaks, correlate
 from scipy import interpolate
-import bottleneck as bn
 
 def load_csv_to_dict(file_path):
     # Load the CSV file with numpy.genfromtxt
