@@ -7,6 +7,7 @@ import os
 from scipy.interpolate import interp1d
 from scipy.signal import find_peaks, correlate
 from scipy import interpolate
+import bottleneck as bn
 
 def load_csv_to_dict(file_path):
     # Load the CSV file with numpy.genfromtxt
@@ -1136,7 +1137,13 @@ def calculate_baseline(ecg_signal, weights, omega):
 # The actual ECG data, weights, and omega value are needed to run this example.
 
 
-
+def calculate_iqr(data, multiplier=1.5):
+    """Calculate lower and upper bounds based on IQR."""
+    Q1,Q3 =  bn.nanquantile(data, [0.25, 0.75])
+    #Q1 = np.percentile(data, 25)
+    #Q3 = np.percentile(data, 75)
+    IQR = Q3 - Q1
+    return Q1 - multiplier * IQR, Q3 + multiplier * IQR
 
 
 def analyze_ecg_segments(segments, iqr_multiplier=1.5, verbose=False):
@@ -1149,13 +1156,6 @@ def analyze_ecg_segments(segments, iqr_multiplier=1.5, verbose=False):
     :param verbose: If True, plot graphs and print information. Default is False.
     :return: The mean ECG calculated from non-outlier segments.
     """
-
-    def calculate_iqr(data, multiplier=1.5):
-        """Calculate lower and upper bounds based on IQR."""
-        Q1 = np.percentile(data, 25)
-        Q3 = np.percentile(data, 75)
-        IQR = Q3 - Q1
-        return Q1 - multiplier * IQR, Q3 + multiplier * IQR
 
     while True:
         # Calculate the initial mean and standard deviation
