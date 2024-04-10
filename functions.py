@@ -1232,3 +1232,24 @@ def final_mean_waveform(ECG, h_p = 1.1, dist = 0.4, OM=1, peak_h=1, iqr_mult = 1
     #print(np.mean(Hs), np.std(Hs))
 
     return segments,representative_heartbeat,ECG_MEDIO, HR,H_mean,H_std
+
+
+
+
+
+def normalize_sequences(arr):
+    # Initialize an empty array with the same shape as the input
+    normalized_arr = np.zeros(arr.shape)
+
+    for i in range(arr.shape[0]):
+        # For each sequence, find the min and max
+        seq_min = arr[i].min(axis=0, keepdims=True)
+        seq_max = arr[i].max(axis=0, keepdims=True)
+
+        # Avoid division by zero in case of constant sequence
+        seq_range = np.where(seq_max - seq_min == 0, 1, seq_max - seq_min)
+
+        # Normalize each sequence
+        normalized_arr[i] = (arr[i] - seq_min) / seq_range
+
+    return normalized_arr
