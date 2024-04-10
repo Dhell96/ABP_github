@@ -1217,7 +1217,7 @@ def analyze_ecg_segments(segments, iqr_multiplier=1.5, verbose=False):
     return new_mean_ecg
 
 
-def final_mean_waveform(ECG, h_p = 1.1, dist = 0.4, OM=1, peak_h=1, iqr_mult = 1.5, sampling_rate=125, window_ms=750, offset_ms=300):
+def final_mean_waveform(ECG, h_p = 1.1, dist = 0.4, OM=1, peak_h=1, iqr_mult = 1.5, sampling_rate=125, window_ms=750, offset_ms=300, return_r_peaks = 0):
     R_peaks, Hs = find_r_peaks(ECG, h_p = h_p, dist=dist, OM=OM, peak_heights=peak_h)
     #plt.plot(ECG)
     #plt.plot(R_peaks, ECG[R_peaks],"x")
@@ -1230,8 +1230,10 @@ def final_mean_waveform(ECG, h_p = 1.1, dist = 0.4, OM=1, peak_h=1, iqr_mult = 1
     H_mean = np.mean(Hs)
     H_std = np.std(Hs)
     #print(np.mean(Hs), np.std(Hs))
-
-    return segments,representative_heartbeat,ECG_MEDIO, HR,H_mean,H_std
+    if return_r_peaks:
+        return segments,representative_heartbeat,ECG_MEDIO, HR,H_mean,H_std, R_peaks
+    else:
+        return segments,representative_heartbeat,ECG_MEDIO, HR,H_mean,H_std
 
 
 
