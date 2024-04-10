@@ -1003,7 +1003,7 @@ def find_r_peaks(ecg_corrected, dist=0.6, h_p=0.5, freq=125, OM=50, peak_heights
     #print(old_min_max, new_min_max)
     s1[0:OM] = 0
     s1[-OM:] = 0
-    peaks, properties = find_peaks(s1, distance=freq*dist, height=np.max(s1)*h_p)
+    peaks, properties = find_peaks(s1, distance=freq*dist, height=np.mean(s1)*(h_p))
     
     if peak_heights == 1:
         return peaks, properties["peak_heights"]*(old_min_max/new_min_max)
@@ -1217,7 +1217,7 @@ def analyze_ecg_segments(segments, iqr_multiplier=1.5, verbose=False):
     return new_mean_ecg
 
 
-def final_mean_waveform(ECG, h_p = 0.4, dist = 0.4, OM=1, peak_h=1, iqr_mult = 1.5, sampling_rate=125, window_ms=750, offset_ms=300):
+def final_mean_waveform(ECG, h_p = 1.1, dist = 0.4, OM=1, peak_h=1, iqr_mult = 1.5, sampling_rate=125, window_ms=750, offset_ms=300):
     R_peaks, Hs = find_r_peaks(ECG, h_p = h_p, dist=dist, OM=OM, peak_heights=peak_h)
     #plt.plot(ECG)
     #plt.plot(R_peaks, ECG[R_peaks],"x")
