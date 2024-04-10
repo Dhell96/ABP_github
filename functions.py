@@ -999,7 +999,7 @@ def find_r_peaks(ecg_corrected, dist=0.6, h_p=0.5, freq=125, OM=50, peak_heights
     old_min_max = np.abs(np.max(ecg_corrected) - np.min(ecg_corrected))
     s1 = zero_one_renorm_single(np.maximum(z_renorm(ecg_corrected), 0))
     new_min_max = np.abs(np.max(s1) - np.min(s1))
-    print(old_min_max, new_min_max)
+    #print(old_min_max, new_min_max)
     s1[0:OM] = 0
     s1[-OM:] = 0
     peaks, properties = find_peaks(s1, distance=freq*dist, height=np.max(s1)*h_p)
@@ -1026,7 +1026,7 @@ def segment_around_r_peaks(ecg_signal, r_peaks, sampling_rate=500, window_ms=750
     offset_samples = int(offset_ms * sampling_rate / 1000)
     edge_threshold = int(20 * sampling_rate / 1000)  # 20 ms in samples
 
-    print(window_ms)
+    #print(window_ms)
 
 
     # Filter out R peaks too close to the signal edges
@@ -1211,7 +1211,7 @@ def analyze_ecg_segments(segments, iqr_multiplier=1.5, verbose=False):
 
         print("Indexes of outlier segments:", outlier_indexes)
 
-    print(iqr_multiplier)
+    #print(iqr_multiplier)
 
     return new_mean_ecg
 
@@ -1228,6 +1228,6 @@ def final_mean_waveform(ECG, h_p = 0.4, dist = 0.4, OM=1, peak_h=1, iqr_mult = 1
     #print(HR)
     H_mean = np.mean(Hs)
     H_std = np.std(Hs)
-    print(np.mean(Hs), np.std(Hs))
+    #print(np.mean(Hs), np.std(Hs))
 
     return segments,representative_heartbeat,ECG_MEDIO, HR,H_mean,H_std
