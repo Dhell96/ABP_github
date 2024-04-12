@@ -1259,9 +1259,9 @@ def normalize_sequences(arr):
 
 
 
-def PWT(ecg,ppg, fs= 125):
+def PWT(ecg,ppg,h_p=1.2,distance=50, fs= 125):
     EEE = zero_one_renorm_single(ecg) 
-    peaks1, _ = find_peaks(EEE, height=np.mean(EEE)*1.5, distance = 50)
+    peaks1, _ = find_peaks(EEE, height=np.mean(EEE)*h_p, distance = distance)
     peak_sequence1 = np.zeros_like(ecg)
     peak_sequence1[peaks1] = 1
 
