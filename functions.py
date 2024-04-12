@@ -1254,3 +1254,51 @@ def normalize_sequences(arr):
         normalized_arr[i] = (arr[i] - seq_min) / seq_range
 
     return normalized_arr
+
+
+
+
+
+def PWT(ecg,ppg, fs= 125):
+    EEE = zero_one_renorm_single(ecg) 
+    peaks1, _ = find_peaks(EEE, height=np.mean(EEE)*1.5, distance = 50)
+    peak_sequence1 = np.zeros_like(ecg)
+    peak_sequence1[peaks1] = 1
+
+    ecg_norm = (ecg - np.mean(ecg)) / np.std(ecg)
+    peak_norm = (peak_sequence1 - np.mean(peak_sequence1)) / np.std(peak_sequence1)
+
+    ppg_norm = (ppg - np.mean(ppg)) / np.std(ppg)
+
+    #plt.figure()
+    #plt.plot(ecg_norm[0:500])
+    #plt.plot(peak_norm[0:500])
+    #plt.plot(ppg_norm[0:500])
+
+
+
+    # Compute cross-correlation
+    correlation = np.correlate(peak_norm, ppg_norm, mode='full')
+
+    # The 'full' mode returns lags from -(N-1) to (N-1), where N is the length of the signal
+    lags = np.arange(-len(ecg_norm) + 1, len(ppg_norm))
+
+    # Find the lag with the maximum correlation
+    max_lag = lags[np.argmax(correlation)]
+
+    # Assuming the sampling rate 'fs' is known, for example, 100 Hz
+    #fs = 125  # Sampling rate in Hz
+    pwt = np.abs(max_lag / fs)  # Convert lag to time
+
+    #print("Estimated PWT (s):", pwt)
+
+    # Plot the cross-correlation
+    #plt.figure(figsize=(10, 5))
+    #plt.plot(lags / fs, correlation)
+    #plt.title('Cross-Correlation between ECG and PPG Signals')
+    #plt.xlabel('Lag (s)')
+    #plt.ylabel('Cross-correlation coefficient')
+    #plt.axvline(pwt, color='red', linestyle='--', label=f'Max Correlation at Lag = {pwt:.3f}s')
+    #plt.legend()
+    #plt.show()
+    return np.abs(max_lag), pwt
