@@ -1302,3 +1302,52 @@ def PWT(ecg,ppg,h_p=1.2,distance=50, fs= 125):
     #plt.legend()
     #plt.show()
     return np.abs(max_lag), pwt
+
+
+
+def ppg_minimum(resampled_samples, ma1_window=50, ma2_window=250):
+    der = zero_one_renorm_single(np.gradient(np.gradient(resampled_samples))) - 0.5
+    b = 0.2
+    der = [x if x >= b else 0 for x in der]
+    dma1 = moving_average(np.abs(der), 20)
+    cond = der > dma1
+    condition_array = cond.astype(int)
+
+    # Initialize lists to store the minimum points and their indices
+    min_points = []
+    min_indices = []
+
+    # Initialize variables to track the start and end of segments
+    in_segment_1 = False
+    segment_start_1 = None
+
+    # Loop through the array to find segments and their extreme points
+    for i in range(len(condition_array)):
+        if condition_array[i] == 1:
+            if not in_segment_1:
+                # Start of a new segment where condition is 1
+                in_segment_1 = True
+                segment_start_1 = i
+        else:
+            if in_segment_1:
+                # End of a segment where condition is 1
+                segment_end_1 = i
+                if segment_end_1 > segment_start_1:  # Check for valid segment
+                    # Find the minimum point in this segment
+                    segment_min_index = segment_start_1 + np.argmin(resampled_samples[segment_start_1:segment_end_1])
+                    min_points.append(resampled_samples[segment_min_index])
+                    min_indices.append(segment_min_index)
+                in_segment_1 = False
+                segment_start_1 = None  # Reset segment_start_1
+
+    # Handle the case where the segment goes until the end of the array
+    if in_segment_1:
+        segment_end_1 = len(condition_array)
+        if segment_end_1 > segment_start_1:  # Check for valid segment
+            segment_min_index = segment_start_1 + np.argmin(resampled_samples[segment_start_1:segment_end_1])
+            min_points.append(resampled_samples[segment_min_index])
+            min_indices.append(segment_min_index)
+
+    min_points = np.array(min_points)  # Convert list to numpy array for plotting
+
+    return min_indices, condition_array
