@@ -1236,7 +1236,7 @@ def final_mean_waveform(ECG, h_p = 1.1, dist = 0.4, OM=1, peak_h=1, iqr_mult = 1
         return segments,representative_heartbeat,ECG_MEDIO, HR,H_mean,H_std
 
 def final_mean_waveform_PPG(ECG,verbose =0, iqr_mult = 1.5, sampling_rate=125, window_ms=750, offset_ms=300, return_r_peaks = 0):
-    R_peaks,_= ppg_minimum(ECG, 10, 80)
+    R_peaks,_= ppg_minimum(ECG)
     #plt.plot(ECG)
     #plt.plot(R_peaks, ECG[R_peaks],"x")
     representative_heartbeat, segments = segment_around_r_peaks(ECG, R_peaks,sampling_rate=sampling_rate, window_ms=window_ms, offset_ms=offset_ms)
@@ -1331,7 +1331,7 @@ def PWT(ecg,ppg,h_p=1.2,distance=50, fs= 125):
 
 def ppg_minimum(resampled_samples, ma1_window=50, ma2_window=250):
     der = zero_one_renorm_single(np.gradient(np.gradient(resampled_samples))) - 0.5
-    b = 0.2
+    b = 0.3
     der = [x if x >= b else 0 for x in der]
     dma1 = moving_average(np.abs(der), 20)
     cond = der > dma1
