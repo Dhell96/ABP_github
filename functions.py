@@ -1251,6 +1251,7 @@ def final_mean_waveform_PPG(ECG,verbose =0, iqr_mult = 1.5, sampling_rate=125, w
     #print(np.mean(Hs), np.std(Hs))
 
     if verbose:
+        plt.figure()
         plt.plot(ECG)
         plt.plot(R_peaks,ECG[R_peaks])
 
