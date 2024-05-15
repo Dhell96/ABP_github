@@ -1030,6 +1030,7 @@ def segment_around_r_peaks(ecg_signal, r_peaks, sampling_rate=500, window_ms=750
 
 
     # Filter out R peaks too close to the signal edges
+    #print(r_peaks)
     r_peaks = [r for r in r_peaks if r >= offset_samples and r <= len(ecg_signal) - (window_samples - offset_samples)]
 
     #segments_index = []
@@ -1234,7 +1235,24 @@ def final_mean_waveform(ECG, h_p = 1.1, dist = 0.4, OM=1, peak_h=1, iqr_mult = 1
     else:
         return segments,representative_heartbeat,ECG_MEDIO, HR,H_mean,H_std
 
-
+def final_mean_waveform_PPG(ECG, iqr_mult = 1.5, sampling_rate=125, window_ms=750, offset_ms=300, return_r_peaks = 0):
+    R_peaks,_= ppg_minimum(ECG)
+    #plt.plot(ECG)
+    #plt.plot(R_peaks, ECG[R_peaks],"x")
+    representative_heartbeat, segments = segment_around_r_peaks(ECG, R_peaks,sampling_rate=sampling_rate, window_ms=window_ms, offset_ms=offset_ms)
+    #print(len(segments))
+    segments = np.array(segments)
+    Hs = np.max(segments)
+    ECG_MEDIO = analyze_ecg_segments(segments, iqr_mult, False)
+    HR = len(segments)*60/12
+    #print(HR)
+    H_mean = np.mean(Hs)
+    H_std = np.std(Hs)
+    #print(np.mean(Hs), np.std(Hs))
+    if return_r_peaks:
+        return segments,representative_heartbeat,ECG_MEDIO, HR,H_mean,H_std, R_peaks
+    else:
+        return segments,representative_heartbeat,ECG_MEDIO, HR,H_mean,H_std
 
 
 
