@@ -1235,7 +1235,7 @@ def final_mean_waveform(ECG, h_p = 1.1, dist = 0.4, OM=1, peak_h=1, iqr_mult = 1
     else:
         return segments,representative_heartbeat,ECG_MEDIO, HR,H_mean,H_std
 
-def final_mean_waveform_PPG(ECG, iqr_mult = 1.5, sampling_rate=125, window_ms=750, offset_ms=300, return_r_peaks = 0):
+def final_mean_waveform_PPG(ECG,verbose =0, iqr_mult = 1.5, sampling_rate=125, window_ms=750, offset_ms=300, return_r_peaks = 0):
     R_peaks,_= ppg_minimum(ECG, 10, 80)
     #plt.plot(ECG)
     #plt.plot(R_peaks, ECG[R_peaks],"x")
@@ -1249,6 +1249,11 @@ def final_mean_waveform_PPG(ECG, iqr_mult = 1.5, sampling_rate=125, window_ms=75
     H_mean = np.mean(Hs)
     H_std = np.std(Hs)
     #print(np.mean(Hs), np.std(Hs))
+
+    if verbose:
+        plt.plot(ECG)
+        plt.plot(R_peaks,ECG[R_peaks])
+
     if return_r_peaks:
         return segments,representative_heartbeat,ECG_MEDIO, HR,H_mean,H_std, R_peaks
     else:
