@@ -1032,7 +1032,7 @@ def segment_around_r_peaks(ecg_signal, r_peaks, sampling_rate=500, window_ms=750
     # Filter out R peaks too close to the signal edges
     #print(r_peaks)
     r_peaks = [r for r in r_peaks if r >= offset_samples and r <= len(ecg_signal) - (window_samples - offset_samples)]
-    
+
     #segments_index = []
     segments = []
     for r_peak in r_peaks:
@@ -1239,7 +1239,6 @@ def final_mean_waveform_PPG(ECG,verbose =0, iqr_mult = 1.5, sampling_rate=125, w
     R_peaks,_= ppg_minimum(ECG)
     #plt.plot(ECG)
     #plt.plot(R_peaks, ECG[R_peaks],"x")
-    print("PPG valleys",len(R_peaks))
     representative_heartbeat, segments = segment_around_r_peaks(ECG, R_peaks,sampling_rate=sampling_rate, window_ms=window_ms, offset_ms=offset_ms)
     #print(len(segments))
     segments = np.array(segments)
@@ -1331,24 +1330,11 @@ def PWT(ecg,ppg,h_p=1.2,distance=50, fs= 125):
 
 
 def ppg_minimum(resampled_samples, ma1_window=50, ma2_window=250):
-    #der_old = functions.zero_one_renorm_single(np.gradient(resampled_samples)) - 0.5
     der = zero_one_renorm_single(np.gradient(np.gradient(resampled_samples))) - 0.5
-    #z = np.where(resampled_samples>=-1, resampled_samples,0)
-    b = moving_average(resampled_samples,50) 
-    #plt.plot(b,label="b")
-    #plt.plot(functions.moving_average(pos_LLL,400))
-    #plt.plot(der,label="der_2")
-    #plt.plot(der_old,label="der_1")
-    # Ensure der and b are numpy arrays
-    der = np.array(der)# + 0.3
-    b = np.array(b)
-
-    der = np.where(der >= b, der, 0)
+    b = 0.3
+    der = [x if x >= b else 0 for x in der]
     dma1 = moving_average(np.abs(der), 20)
-    #dma1 = functions.zero_one_renorm_single(dma1)
-    #plt.plot(dma1, label="dma")
-    #cond = der > dma1 #0.1
-    cond = der > b
+    cond = der > dma1
     condition_array = cond.astype(int)
 
     # Initialize lists to store the minimum points and their indices
@@ -1387,5 +1373,5 @@ def ppg_minimum(resampled_samples, ma1_window=50, ma2_window=250):
             min_indices.append(segment_min_index)
 
     min_points = np.array(min_points)  # Convert list to numpy array for plotting
-    #plt.plot(condition_array, label ="cond")
+
     return min_indices, condition_array
