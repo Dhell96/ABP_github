@@ -1032,7 +1032,7 @@ def segment_around_r_peaks(ecg_signal, r_peaks, sampling_rate=500, window_ms=750
     # Filter out R peaks too close to the signal edges
     #print(r_peaks)
     r_peaks = [r for r in r_peaks if r >= offset_samples and r <= len(ecg_signal) - (window_samples - offset_samples)]
-
+    print(len(r_peaks))
     #segments_index = []
     segments = []
     for r_peak in r_peaks:
@@ -1335,7 +1335,7 @@ def ppg_minimum(resampled_samples, ma1_window=50, ma2_window=250):
     der = np.array(der)# + 0.3
     b = np.array(b)
     der = np.where(der >= b, der, 0)
-    dma1 = moving_average(np.abs(der), 20)
+    #dma1 = moving_average(np.abs(der), 20)
     #cond = der > dma1
     cond = der > b
     condition_array = cond.astype(int)
