@@ -1331,10 +1331,13 @@ def PWT(ecg,ppg,h_p=1.2,distance=50, fs= 125):
 
 def ppg_minimum(resampled_samples, ma1_window=50, ma2_window=250):
     der = zero_one_renorm_single(np.gradient(np.gradient(resampled_samples))) - 0.5
-    b = 0.3
-    der = [x if x >= b else 0 for x in der]
+    b = moving_average(resampled_samples,50) + 0.2 
+    der = np.array(der)# + 0.3
+    b = np.array(b)
+    der = np.where(der >= b, der, 0)
     dma1 = moving_average(np.abs(der), 20)
-    cond = der > dma1
+    #cond = der > dma1
+    cond = der > b
     condition_array = cond.astype(int)
 
     # Initialize lists to store the minimum points and their indices
