@@ -1032,7 +1032,7 @@ def segment_around_r_peaks(ecg_signal, r_peaks, sampling_rate=500, window_ms=750
     # Filter out R peaks too close to the signal edges
     #print(r_peaks)
     r_peaks = [r for r in r_peaks if r >= offset_samples and r <= len(ecg_signal) - (window_samples - offset_samples)]
-    print(len(r_peaks))
+    
     #segments_index = []
     segments = []
     for r_peak in r_peaks:
@@ -1239,6 +1239,7 @@ def final_mean_waveform_PPG(ECG,verbose =0, iqr_mult = 1.5, sampling_rate=125, w
     R_peaks,_= ppg_minimum(ECG)
     #plt.plot(ECG)
     #plt.plot(R_peaks, ECG[R_peaks],"x")
+    print("PPG valleys",len(R_peaks))
     representative_heartbeat, segments = segment_around_r_peaks(ECG, R_peaks,sampling_rate=sampling_rate, window_ms=window_ms, offset_ms=offset_ms)
     #print(len(segments))
     segments = np.array(segments)
