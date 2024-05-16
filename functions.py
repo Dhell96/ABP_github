@@ -1331,13 +1331,23 @@ def PWT(ecg,ppg,h_p=1.2,distance=50, fs= 125):
 
 
 def ppg_minimum(resampled_samples, ma1_window=50, ma2_window=250):
+    #der_old = functions.zero_one_renorm_single(np.gradient(resampled_samples)) - 0.5
     der = zero_one_renorm_single(np.gradient(np.gradient(resampled_samples))) - 0.5
-    b = moving_average(resampled_samples,50) + 0.2 
+    #z = np.where(resampled_samples>=-1, resampled_samples,0)
+    b = moving_average(resampled_samples,50) 
+    #plt.plot(b,label="b")
+    #plt.plot(functions.moving_average(pos_LLL,400))
+    #plt.plot(der,label="der_2")
+    #plt.plot(der_old,label="der_1")
+    # Ensure der and b are numpy arrays
     der = np.array(der)# + 0.3
     b = np.array(b)
+
     der = np.where(der >= b, der, 0)
-    #dma1 = moving_average(np.abs(der), 20)
-    #cond = der > dma1
+    dma1 = moving_average(np.abs(der), 20)
+    #dma1 = functions.zero_one_renorm_single(dma1)
+    #plt.plot(dma1, label="dma")
+    #cond = der > dma1 #0.1
     cond = der > b
     condition_array = cond.astype(int)
 
@@ -1377,5 +1387,5 @@ def ppg_minimum(resampled_samples, ma1_window=50, ma2_window=250):
             min_indices.append(segment_min_index)
 
     min_points = np.array(min_points)  # Convert list to numpy array for plotting
-
+    #plt.plot(condition_array, label ="cond")
     return min_indices, condition_array
