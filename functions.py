@@ -1329,11 +1329,10 @@ def PWT(ecg,ppg,h_p=1.2,distance=50, fs= 125):
 
 
 
-def ppg_minimum(resampled_samples, ma1_window=50, ma2_window=250):
+def ppg_minimum(resampled_samples,b= 0.2, ma1_window=20):
     der = zero_one_renorm_single(np.gradient(np.gradient(resampled_samples))) - 0.5
-    b = 0.3
     der = [x if x >= b else 0 for x in der]
-    dma1 = moving_average(np.abs(der), 20)
+    dma1 = moving_average(np.abs(der), ma1_window)
     cond = der > dma1
     condition_array = cond.astype(int)
 
