@@ -1235,8 +1235,11 @@ def final_mean_waveform(ECG, h_p = 1.1, dist = 0.4, OM=1, peak_h=1, iqr_mult = 1
     else:
         return segments,representative_heartbeat,ECG_MEDIO, HR,H_mean,H_std
 
-def final_mean_waveform_PPG(ECG,verbose =0, h_p = 1.1, dist = 0.4, OM=1, peak_h=1, iqr_mult = 1.5, sampling_rate=125, window_ms=750, offset_ms=300, return_r_peaks = 0):
-    R_peaks, Hs = find_r_peaks(ECG, h_p = h_p, dist=dist, OM=OM, peak_heights=peak_h)
+def final_mean_waveform_PPG(ECG,verbose =0, find_min=0, h_p = 1.1, dist = 0.4, OM=1, peak_h=1, iqr_mult = 1.5, sampling_rate=125, window_ms=750, offset_ms=300, return_r_peaks = 0):
+    if find_min:
+        R_peaks, Hs = find_r_peaks(zero_one_renorm_single(-ECG), h_p = h_p, dist=dist, OM=OM, peak_heights=peak_h)
+    else:
+        R_peaks, Hs = find_r_peaks(ECG, h_p = h_p, dist=dist, OM=OM, peak_heights=peak_h)
     #plt.plot(ECG)
     #plt.plot(R_peaks, ECG[R_peaks],"x")
     representative_heartbeat, segments = segment_around_r_peaks(ECG, R_peaks,sampling_rate=sampling_rate, window_ms=window_ms, offset_ms=offset_ms)
