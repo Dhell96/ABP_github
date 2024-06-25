@@ -979,7 +979,7 @@ def calculate_hr(ecg_data, sampling_rate=125):
 import numpy as np
 from scipy.signal import find_peaks
 
-def find_r_peaks(ecg_corrected, dist=0.6, h_p=0.5, freq=125, OM=50, peak_heights=0):
+def find_r_peaks(ecg_corrected, dist=0.6, h_p=0.5, freq=125, OM=50, peak_heights=0, ww = None):
     """
     Find the R-peaks in the corrected ECG signal and optionally their heights.
 
@@ -1002,7 +1002,7 @@ def find_r_peaks(ecg_corrected, dist=0.6, h_p=0.5, freq=125, OM=50, peak_heights
     #print(old_min_max, new_min_max)
     s1[0:OM] = 0
     s1[-OM:] = 0
-    peaks, properties = find_peaks(s1, distance=freq*dist, height=np.mean(s1)*(h_p))
+    peaks, properties = find_peaks(s1, distance=freq*dist, height=np.mean(s1)*(h_p), width = ww)
     
     if peak_heights == 1:
         return peaks, properties["peak_heights"]*(old_min_max/new_min_max)
@@ -1217,8 +1217,8 @@ def analyze_ecg_segments(segments, iqr_multiplier=1.5, verbose=False):
     return new_mean_ecg
 
 
-def final_mean_waveform(ECG, h_p = 1.1, dist = 0.4, OM=1, peak_h=1, iqr_mult = 1.5, sampling_rate=125, window_ms=750, offset_ms=300, return_r_peaks = 0):
-    R_peaks, Hs = find_r_peaks(ECG, h_p = h_p, dist=dist, OM=OM, peak_heights=peak_h)
+def final_mean_waveform(ECG, h_p = 1.1, dist = 0.4, OM=1, peak_h=1, iqr_mult = 1.5, sampling_rate=125, window_ms=750, offset_ms=300, return_r_peaks = 0, ww = None):
+    R_peaks, Hs = find_r_peaks(ECG, h_p = h_p, dist=dist, OM=OM, peak_heights=peak_h, freq=sampling_rate, ww = ww)
     #plt.plot(ECG)
     #plt.plot(R_peaks, ECG[R_peaks],"x")
     representative_heartbeat, segments = segment_around_r_peaks(ECG, R_peaks,sampling_rate=sampling_rate, window_ms=window_ms, offset_ms=offset_ms)
@@ -1237,9 +1237,9 @@ def final_mean_waveform(ECG, h_p = 1.1, dist = 0.4, OM=1, peak_h=1, iqr_mult = 1
 
 def final_mean_waveform_PPG(ECG,verbose =0, find_min=0, h_p = 1.1, dist = 0.4, OM=1, peak_h=1, iqr_mult = 1.5, sampling_rate=125, window_ms=750, offset_ms=300, return_r_peaks = 0):
     if find_min:
-        R_peaks, Hs = find_r_peaks(zero_one_renorm_single(-ECG), h_p = h_p, dist=dist, OM=OM, peak_heights=peak_h)
+        R_peaks, Hs = find_r_peaks(zero_one_renorm_single(-ECG), h_p = h_p, dist=dist, OM=OM, peak_heights=peak_h, freq=sampling_rate)
     else:
-        R_peaks, Hs = find_r_peaks(ECG, h_p = h_p, dist=dist, OM=OM, peak_heights=peak_h)
+        R_peaks, Hs = find_r_peaks(ECG, h_p = h_p, dist=dist, OM=OM, peak_heights=peak_h, freq=sampling_rate)
     #plt.plot(ECG)
     #plt.plot(R_peaks, ECG[R_peaks],"x")
     representative_heartbeat, segments = segment_around_r_peaks(ECG, R_peaks,sampling_rate=sampling_rate, window_ms=window_ms, offset_ms=offset_ms)
