@@ -7,6 +7,7 @@ import os
 from scipy.interpolate import interp1d
 from scipy.signal import find_peaks, correlate
 from scipy import interpolate
+from sklearn.metrics import r2_score
 
 def load_csv_to_dict(file_path):
     # Load the CSV file with numpy.genfromtxt
@@ -1147,7 +1148,7 @@ def calculate_iqr(data, multiplier=1.5):
     return Q1 - multiplier * IQR, Q3 + multiplier * IQR
 
 
-def analyze_ecg_segments(segments, iqr_multiplier=1.5, verbose=False):
+def analyze_ecg_segments_q(segments, iqr_multiplier=1.5, verbose=False):
     """
     Analyze ECG segments to find the mean ECG excluding outliers. If all segments are outliers,
     the IQR multiplier is increased incrementally until at least 2 segments survive.
@@ -1215,6 +1216,62 @@ def analyze_ecg_segments(segments, iqr_multiplier=1.5, verbose=False):
     #print(iqr_multiplier)
 
     return new_mean_ecg
+
+
+
+
+def analyze_ecg_segments(segments, r2_threshold=0.5, verbose=False):
+    """
+    Analyze ECG segments to find the mean ECG excluding outliers based on R-squared comparison with the mean ECG.
+    If segments fall below the R-squared threshold, they are considered outliers.
+
+    :param segments: A numpy array of ECG segments.
+    :param r2_threshold: Threshold for R-squared to determine outliers. Default is 0.5.
+    :param verbose: If True, plot graphs and print information. Default is False.
+    :return: The mean ECG calculated from non-outlier segments.
+    """
+
+    # Calculate the mean ECG across all segments
+    mean_ecg = np.mean(segments, axis=0)
+
+    # Calculate R-squared values for each segment against the mean ECG
+    r2_scores = [r2_score(y_true=mean_ecg, y_pred=segment) for segment in segments]
+
+    # Identify non-outlier segments based on R-squared threshold
+    non_outlier_segments = segments[np.where(np.array(r2_scores) >= r2_threshold)]
+
+    # Check if enough segments have survived
+    while len(non_outlier_segments) < 2:
+        r2_threshold -= 0.05  # Decrement the threshold if too few segments are non-outliers
+        non_outlier_segments = segments[np.where(np.array(r2_scores) >= r2_threshold)]
+
+    # Recalculate the mean ECG using only non-outlier segments
+    new_mean_ecg = np.mean(non_outlier_segments, axis=0)
+
+    if verbose:
+        plt.figure(figsize=(10, 6))
+        for segment in segments:
+            plt.plot(segment, color='lightgray', lw=0.5)
+        plt.plot(mean_ecg, color='blue', label='Mean ECG', lw=2)
+        plt.title('Initial ECG Segments and Mean ECG')
+        plt.xlabel('Time Points')
+        plt.ylabel('ECG Signal')
+        plt.legend()
+        plt.show()
+
+        plt.figure(figsize=(10, 6))
+        for segment in non_outlier_segments:
+            plt.plot(segment, color='lightgray', lw=1)
+        plt.plot(new_mean_ecg, color='blue', label='New Mean ECG', lw=2)
+        plt.title('Non-Outlier ECG Segments and New Mean ECG')
+        plt.xlabel('Time Points')
+        plt.ylabel('ECG Signal')
+        plt.legend()
+        plt.show()
+
+    return new_mean_ecg
+
+
 
 
 def final_mean_waveform(ECG, h_p = 1.1, dist = 0.4, OM=1, peak_h=1, iqr_mult = 1.5, sampling_rate=125, window_ms=750, offset_ms=300, return_r_peaks = 0, ww = None):
