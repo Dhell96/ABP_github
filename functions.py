@@ -1274,14 +1274,17 @@ def analyze_ecg_segments(segments, r2_threshold=0.5, verbose=False):
 
 
 
-def final_mean_waveform(ECG, h_p = 1.1, dist = 0.4, OM=1, peak_h=1, iqr_mult = 1.5, sampling_rate=125, window_ms=750, offset_ms=300, return_r_peaks = 0, ww = None):
+def final_mean_waveform(ECG, h_p = 1.1, dist = 0.4, OM=1, peak_h=1, iqr_mult = 1.5, sampling_rate=125, window_ms=750, offset_ms=300, return_r_peaks = 0, ww = None, method = "iqr", thr = 0.5, verbose = False):
     R_peaks, Hs = find_r_peaks(ECG, h_p = h_p, dist=dist, OM=OM, peak_heights=peak_h, freq=sampling_rate, ww = ww)
     #plt.plot(ECG)
     #plt.plot(R_peaks, ECG[R_peaks],"x")
     representative_heartbeat, segments = segment_around_r_peaks(ECG, R_peaks,sampling_rate=sampling_rate, window_ms=window_ms, offset_ms=offset_ms)
     #print(len(segments))
     segments = np.array(segments)
-    ECG_MEDIO = analyze_ecg_segments(segments, iqr_mult, False)
+    if method == "iqr":
+        ECG_MEDIO = analyze_ecg_segments_q(segments, iqr_mult, verbose)
+    elif method =="r_square":
+        ECG_MEDIO = analyze_ecg_segments(segments,thr, verbose)
     HR = len(segments)*60/12
     #print(HR)
     H_mean = np.mean(Hs)
@@ -1292,7 +1295,7 @@ def final_mean_waveform(ECG, h_p = 1.1, dist = 0.4, OM=1, peak_h=1, iqr_mult = 1
     else:
         return segments,representative_heartbeat,ECG_MEDIO, HR,H_mean,H_std
 
-def final_mean_waveform_PPG(ECG,verbose =0, find_min=0, h_p = 1.1, dist = 0.4, OM=1, peak_h=1, iqr_mult = 1.5, sampling_rate=125, window_ms=750, offset_ms=300, return_r_peaks = 0):
+def final_mean_waveform_PPG(ECG,verbose = False, find_min=0, h_p = 1.1, dist = 0.4, OM=1, peak_h=1, iqr_mult = 1.5, sampling_rate=125, window_ms=750, offset_ms=300, return_r_peaks = 0,method = "iqr", thr = 0.5):
     if find_min:
         R_peaks, Hs = find_r_peaks(zero_one_renorm_single(-ECG), h_p = h_p, dist=dist, OM=OM, peak_heights=peak_h, freq=sampling_rate)
     else:
@@ -1303,7 +1306,10 @@ def final_mean_waveform_PPG(ECG,verbose =0, find_min=0, h_p = 1.1, dist = 0.4, O
     #print(len(segments))
     segments = np.array(segments)
     Hs = np.max(segments)
-    ECG_MEDIO = analyze_ecg_segments(segments, iqr_mult, False)
+    if method == "iqr":
+        ECG_MEDIO = analyze_ecg_segments_q(segments, iqr_mult, verbose)
+    elif method =="r_square":
+        ECG_MEDIO = analyze_ecg_segments(segments,thr, verbose)
     HR = len(segments)*60/12
     #print(HR)
     H_mean = np.mean(Hs)
