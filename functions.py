@@ -1004,7 +1004,8 @@ def find_r_peaks(ecg_corrected, dist=0.6, h_p=0.5, freq=125, OM=50, peak_heights
     #print(old_min_max, new_min_max)
     s1[0:OM] = 0
     s1[-OM:] = 0
-    peaks, properties = find_peaks(s1, distance=freq*dist, height=np.mean(s1)*(h_p), width = ww)
+    #peaks, properties = find_peaks(s1, distance=freq*dist, height=np.mean(s1)*(h_p), width = ww)
+    peaks, properties = find_peaks(s1, distance=freq*dist, height=np.mean(s1)*(h_p))
 
     if verbose:
         plt.figure(figsize=(20,8))
@@ -1017,7 +1018,7 @@ def find_r_peaks(ecg_corrected, dist=0.6, h_p=0.5, freq=125, OM=50, peak_heights
 
         plt.vlines(x=peaks, ymin=s1[peaks] - properties["prominences"],ymax = s1[peaks], color = "C1")
         plt.hlines(y=properties["width_heights"], xmin=properties["left_ips"],xmax=properties["right_ips"], color = "C1")
-        plt.xlim(2000, 400)
+        #plt.xlim(2000, 400)
         plt.legend()
         plt.show()
 
