@@ -1005,7 +1005,7 @@ def find_r_peaks(ecg_corrected, min_dist=250, h_p=0.5, freq=125, OM=50, peak_hei
     s1[0:OM] = 0
     s1[-OM:] = 0
     #peaks, properties = find_peaks(s1, distance=freq*dist, height=np.mean(s1)*(h_p), width = ww)
-    peaks, properties = find_peaks(s1,distance = min_dist*h_p)
+    peaks, properties = find_peaks(s1,distance = min_dist*h_p, width = ww)
 
     if verbose:
         plt.figure(figsize=(20,8))
