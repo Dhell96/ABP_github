@@ -980,7 +980,7 @@ def calculate_hr(ecg_data, sampling_rate=125):
 import numpy as np
 from scipy.signal import find_peaks
 
-def find_r_peaks(ecg_corrected, dist=0.6, h_p=0.5, freq=125, OM=50, peak_heights=0, ww = None):
+def find_r_peaks(ecg_corrected, dist=0.6, h_p=0.5, freq=125, OM=50, peak_heights=0, ww = None, verbose = False):
     """
     Find the R-peaks in the corrected ECG signal and optionally their heights.
 
@@ -1004,6 +1004,22 @@ def find_r_peaks(ecg_corrected, dist=0.6, h_p=0.5, freq=125, OM=50, peak_heights
     s1[0:OM] = 0
     s1[-OM:] = 0
     peaks, properties = find_peaks(s1, distance=freq*dist, height=np.mean(s1)*(h_p), width = ww)
+
+    if verbose:
+        plt.figure()
+        # Plotting the data
+        plt.plot(ecg_corrected, label='Signal')
+
+        # Marking the peaks
+        plt.plot(peaks, ecg_corrected[peaks], "x", label='Peaks')
+
+        # Adding lines to show height
+        for peak in peaks:
+            plt.plot([peak, peak], [0, ecg_corrected[peak]], "r--")
+
+        plt.legend()
+        plt.show()
+
     
     if peak_heights == 1:
         return peaks, properties["peak_heights"]*(old_min_max/new_min_max)
@@ -1288,7 +1304,7 @@ def analyze_ecg_segments(segments, r2_threshold=0.5, verbose=False):
 
 
 def final_mean_waveform(ECG, h_p = 1.1, dist = 0.4, OM=1, peak_h=1, iqr_mult = 1.5, sampling_rate=125, window_ms=750, offset_ms=300, return_r_peaks = 0, ww = None, method = "iqr", thr = 0.5, verbose = False):
-    R_peaks, Hs = find_r_peaks(ECG, h_p = h_p, dist=dist, OM=OM, peak_heights=peak_h, freq=sampling_rate, ww = ww)
+    R_peaks, Hs = find_r_peaks(ECG, h_p = h_p, dist=dist, OM=OM, peak_heights=peak_h, freq=sampling_rate, ww = ww, verbose = verbose)
     #plt.plot(ECG)
     #plt.plot(R_peaks, ECG[R_peaks],"x")
     representative_heartbeat, segments = segment_around_r_peaks(ECG, R_peaks,sampling_rate=sampling_rate, window_ms=window_ms, offset_ms=offset_ms)
