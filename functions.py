@@ -998,7 +998,7 @@ def find_r_peaks(ecg_corrected, dist=0.6, h_p=0.5, freq=125, OM=50, peak_heights
     """
     # Find peaks using the specified minimum distance and height criteria
     old_min_max = np.abs(np.max(ecg_corrected) - np.min(ecg_corrected))
-    s1 = zero_one_renorm_single(np.maximum(z_renorm(ecg_corrected), 0))
+    s1 = zero_one_renorm_single(z_renorm(ecg_corrected))
     new_min_max = np.abs(np.max(s1) - np.min(s1))
     #print(old_min_max, new_min_max)
     s1[0:OM] = 0
