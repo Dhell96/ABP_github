@@ -1003,7 +1003,7 @@ def find_r_peaks(ecg_corrected, dist=0.6, h_p=0.5, freq=125, OM=50, peak_heights
     #print(old_min_max, new_min_max)
     s1[0:OM] = 0
     s1[-OM:] = 0
-    peaks, properties = find_peaks(s1, distance=freq*dist, height=np.mean(s1)*(h_p), width = ww)
+    peaks, properties = find_peaks(s1, distance=freq*dist, width = ww)#, height=np.mean(s1)*(h_p))
 
     if verbose:
         plt.figure(figsize=(20,8))
