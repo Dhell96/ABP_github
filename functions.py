@@ -1331,7 +1331,7 @@ def final_mean_waveform_PPG(ECG,verbose = False, find_min=0, h_p = 1.1, dist = 0
     #if find_min:
     Hs = []
     R_peaks, _ = find_r_peaks(zero_one_renorm_single(-ECG), h_p = h_p, dist=dist, OM=OM, peak_heights=peak_h, freq=sampling_rate)
-    for i in range(0, R_peaks-1):
+    for i in range(0, len(R_peaks)-1):
         Hs.append(abs(np.max(ECG[R_peaks[i]:R_peaks[i+1]]) - ((ECG[R_peaks[i]] + ECG[R_peaks[i+1]])/2))) 
     #else:
     #    R_peaks, Hs = find_r_peaks(ECG, h_p = h_p, dist=dist, OM=OM, peak_heights=peak_h, freq=sampling_rate)
