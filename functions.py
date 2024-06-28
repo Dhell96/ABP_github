@@ -1005,7 +1005,7 @@ def find_r_peaks(ecg_corrected, min_dist=250, h_p=0.5, freq=125, OM=50, peak_hei
     s1[0:OM] = 0
     s1[-OM:] = 0
     #peaks, properties = find_peaks(s1, distance=freq*dist, height=np.mean(s1)*(h_p), width = ww)
-    peaks, properties = find_peaks(s1,distance = min_dist)
+    peaks, properties = find_peaks(s1,distance = min_dist*h_p)
 
     if verbose:
         plt.figure(figsize=(20,8))
@@ -1017,7 +1017,7 @@ def find_r_peaks(ecg_corrected, min_dist=250, h_p=0.5, freq=125, OM=50, peak_hei
 
         plt.vlines(x=peaks, ymin=s1[peaks] - properties["prominences"],ymax = s1[peaks], color = "C1")
         plt.hlines(y=properties["width_heights"], xmin=properties["left_ips"],xmax=properties["right_ips"], color = "C1")
-        plt.xlim(2000, 4000)
+        #plt.xlim(2000, 4000)
         plt.legend()
         plt.show()
 
@@ -1304,8 +1304,8 @@ def analyze_ecg_segments(segments, r2_threshold=0.5, verbose=False):
 
 
 
-def final_mean_waveform(ECG, h_p = 1.1, dist = 0.4, OM=1, peak_h=1, iqr_mult = 1.5, sampling_rate=125, window_ms=750, offset_ms=300, return_r_peaks = 0, ww = None, method = "iqr", thr = 0.5, verbose = False):
-    R_peaks, Hs = find_r_peaks(ECG, h_p = h_p, min_dist = window_ms*0.9, OM=OM, peak_heights=peak_h, freq=sampling_rate, ww = ww, verbose = verbose)
+def final_mean_waveform(ECG, h_p = 0.5, dist = 0.4, OM=1, peak_h=1, iqr_mult = 1.5, sampling_rate=125, window_ms=750, offset_ms=300, return_r_peaks = 0, ww = None, method = "iqr", thr = 0.5, verbose = False):
+    R_peaks, Hs = find_r_peaks(ECG, h_p = h_p, min_dist = window_ms, OM=OM, peak_heights=peak_h, freq=sampling_rate, ww = ww, verbose = verbose)
     #plt.plot(ECG)
     #plt.plot(R_peaks, ECG[R_peaks],"x")
     representative_heartbeat, segments = segment_around_r_peaks(ECG, R_peaks,sampling_rate=sampling_rate, window_ms=window_ms, offset_ms=offset_ms)
