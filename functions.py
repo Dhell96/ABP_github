@@ -1008,14 +1008,14 @@ def find_r_peaks(ecg_corrected, dist=0.6, h_p=0.5, freq=125, OM=50, peak_heights
     if verbose:
         plt.figure(figsize=(20,8))
         # Plotting the data
-        plt.plot(ecg_corrected, label='Signal')
+        plt.plot(s1, label='Signal')
 
         # Marking the peaks
-        plt.plot(peaks, ecg_corrected[peaks], "x", label='Peaks')
+        plt.plot(peaks, s1[peaks], "x", label='Peaks')
 
-        plt.vlines(x=peaks, ymin=ecg_corrected[peaks] - properties["prominences"],ymax = ecg_corrected[peaks], color = "C1")
+        plt.vlines(x=peaks, ymin=s1[peaks] - properties["prominences"],ymax = s1[peaks], color = "C1")
         plt.hlines(y=properties["width_heights"], xmin=properties["left_ips"],xmax=properties["right_ips"], color = "C1")
-
+        plt.xlim(2000, 4000)
         plt.legend()
         plt.show()
 
