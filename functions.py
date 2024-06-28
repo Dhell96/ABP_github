@@ -1006,7 +1006,7 @@ def find_r_peaks(ecg_corrected, dist=0.6, h_p=0.5, freq=125, OM=50, peak_heights
     peaks, properties = find_peaks(s1, distance=freq*dist, height=np.mean(s1)*(h_p), width = ww)
 
     if verbose:
-        plt.figure()
+        plt.figure(figsize=(20,8))
         # Plotting the data
         plt.plot(ecg_corrected, label='Signal')
 
