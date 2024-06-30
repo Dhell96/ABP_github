@@ -1255,7 +1255,8 @@ def analyze_ecg_segments(segments, r2_threshold=0.5, verbose=False):
 
     # Calculate R-squared values for each segment against the mean ECG
     r2_scores = [r2_score(y_true=mean_ecg, y_pred=segment) for segment in segments]
-
+    if verbose:
+        print(r2_scores)
     # Identify non-outlier and outlier segments based on R-squared threshold
     non_outlier_indexes = [i for i, r2 in enumerate(r2_scores) if r2 >= r2_threshold]
     outlier_indexes = [i for i, r2 in enumerate(r2_scores) if r2 < r2_threshold]
