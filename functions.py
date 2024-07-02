@@ -1308,21 +1308,21 @@ def analyze_ecg_segments(segments, r2_threshold=0.5, verbose=False):
 
 def final_mean_waveform(ECG, h_p = 1.1, dist = 0.4, OM=1, peak_h=1, iqr_mult = 1.5, sampling_rate=125, window_ms=750, offset_ms=300, return_r_peaks = 0, ww = None, method = "iqr", thr = 0.5, verbose = False):
     R_peaks, _ = find_r_peaks(ECG, h_p = h_p, dist=dist, OM=OM, peak_heights=peak_h, freq=sampling_rate, ww = ww, verbose = verbose)
-    print("1")
+    #print("1")
     Hs = ECG[R_peaks] - np.mean(ECG)
     #plt.plot(ECG)
     #plt.plot(R_peaks, ECG[R_peaks],"x")
-    print("2")
+    #print("2")
     representative_heartbeat, segments = segment_around_r_peaks(ECG, R_peaks,sampling_rate=sampling_rate, window_ms=window_ms, offset_ms=offset_ms)
     #print(len(segments))
-    print("3")
+    #print("3")
     segments = np.array(segments)
     if method == "iqr":
         ECG_MEDIO = analyze_ecg_segments_q(segments, iqr_mult, verbose)
     elif method =="r_square":
         ECG_MEDIO = analyze_ecg_segments(segments,thr, verbose)
 
-    print("4")
+    #print("4")
 
     HR = len(segments)*60/12
     #print(HR)
