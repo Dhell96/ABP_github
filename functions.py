@@ -1262,10 +1262,17 @@ def analyze_ecg_segments(segments, r2_threshold=0.5, verbose=False):
     outlier_indexes = [i for i, r2 in enumerate(r2_scores) if r2 < r2_threshold]
 
     # Check if enough segments have survived
-    while len(non_outlier_indexes) < 2:
-        r2_threshold -= 0.05  # Decrement the threshold if too few segments are non-outliers
-        non_outlier_indexes = [i for i, r2 in enumerate(r2_scores) if r2 >= r2_threshold]
-        outlier_indexes = [i for i, r2 in enumerate(r2_scores) if r2 < r2_threshold]
+    #while len(non_outlier_indexes) < 2:
+    #    r2_threshold -= 0.05  # Decrement the threshold if too few segments are non-outliers
+    #    non_outlier_indexes = [i for i, r2 in enumerate(r2_scores) if r2 >= r2_threshold]
+    #    outlier_indexes = [i for i, r2 in enumerate(r2_scores) if r2 < r2_threshold]
+
+        # Check if enough segments have survived
+    if len(non_outlier_indexes) < 2:
+        # Sort by R-squared score in descending order and take the top 2 indices
+        sorted_indices = np.argsort(r2_scores)[::-1]
+        non_outlier_indexes = sorted_indices[:2].tolist()
+        outlier_indexes = sorted_indices[2:].tolist()
 
     # Extract non-outlier segments
     non_outlier_segments = segments[non_outlier_indexes]
