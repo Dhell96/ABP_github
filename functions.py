@@ -8,6 +8,7 @@ from scipy.interpolate import interp1d
 from scipy.signal import find_peaks, correlate
 from scipy import interpolate
 from sklearn.metrics import r2_score
+import pywt
 
 def load_csv_to_dict(file_path):
     # Load the CSV file with numpy.genfromtxt
@@ -1490,3 +1491,29 @@ def ppg_minimum(resampled_samples,b= 0.2, ma1_window=20):
     min_points = np.array(min_points)  # Convert list to numpy array for plotting
 
     return min_indices, condition_array
+
+
+def generate_scalogram(ecg_window, fs, freqs, wavelet='mexh'):
+    """
+    Generate a scalogram for a single ECG window.
+
+    Parameters:
+    - ecg_window (ndarray): ECG signal (1D array) for the window.
+    - fs (float): Sampling frequency (Hz).
+    - freqs (array-like): Frequencies of interest (Hz).
+    - wavelet (str): Wavelet to use ('mexh' for Mexican Hat).
+
+    Returns:
+    - scalogram (ndarray): Scalogram with shape (len(freqs), len(ecg_window)).
+    """
+    # Calculate scales corresponding to the specified frequencies
+    scales = pywt.central_frequency(wavelet) / (freqs / fs)
+    #print("SC:",scales)
+
+    # Perform Continuous Wavelet Transform
+    coefficients, _ = pywt.cwt(ecg_window, scales,wavelet, sampling_period=1/fs)
+    
+    # Take the magnitude of the coefficients to represent power
+    scalogram = np.abs(coefficients) ** 2
+
+    return scalogram
